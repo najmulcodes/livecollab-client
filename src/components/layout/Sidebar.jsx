@@ -46,7 +46,7 @@ export default function Sidebar({ workspace, onClose }) {
       {/* Header */}
       <div className="p-4 border-b border-white/5">
         <div className="flex items-center justify-between mb-3">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <div className="w-7 h-7 bg-brand-500 rounded-lg flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-white" fill="white" />
             </div>

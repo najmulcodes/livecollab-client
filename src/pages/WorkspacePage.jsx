@@ -56,7 +56,7 @@ export default function WorkspacePage() {
   if (wsError) return (
     <div className="min-h-screen bg-[#0f0e1a] flex flex-col items-center justify-center gap-4">
       <p className="text-red-400">Failed to load workspace</p>
-      <button onClick={() => navigate('/')} className="text-brand-400 hover:text-brand-300 flex items-center gap-2 text-sm">
+      <button onClick={() => navigate('/dashboard')} className="text-brand-400 hover:text-brand-300 flex items-center gap-2 text-sm">
         <ArrowLeft className="w-4 h-4" /> Go back
       </button>
     </div>
@@ -86,7 +86,7 @@ export default function WorkspacePage() {
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-400 hover:text-white transition-colors">
             <Menu className="w-5 h-5" />
           </button>
-          <button onClick={() => navigate('/')} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => navigate('/dashboard')} className="text-slate-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
