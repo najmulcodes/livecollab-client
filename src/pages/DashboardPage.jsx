@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>LiveCollab — Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
+import React from "react";
+
+export default function DashboardPage() {
+  return (
+    <>
+      <style>{`
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap");
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -333,276 +332,273 @@
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-</style>
-</head>
-<body>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="sidebar-logo">
+      `}</style>
+{/* SIDEBAR */}
+<div className="sidebar">
+  <div className="sidebar-logo">
     <svg viewBox="0 0 20 20" fill="none">
       <path d="M5 5 L13 17 L15 12 L19 10 Z" fill="#fff" opacity="0.9"/>
       <circle cx="17" cy="4" r="2.5" fill="#e8a24a"/>
     </svg>
   </div>
-  <div class="sidebar-nav">
-    <!-- Dashboard -->
-    <div class="nav-item" title="Dashboard">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span class="nav-label">Dash</span>
+  <div className="sidebar-nav">
+    {/* Dashboard */}
+    <div className="nav-item" title="Dashboard">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span className="nav-label">Dash</span>
     </div>
-    <!-- SMS -->
-    <div class="nav-item" title="SMS">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-      <span class="nav-label">SMS</span>
+    {/* SMS */}
+    <div className="nav-item" title="SMS">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <span className="nav-label">SMS</span>
     </div>
-    <!-- Email (active) -->
-    <div class="nav-item active" title="Email">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Email</span>
+    {/* Email (active) */}
+    <div className="nav-item active" title="Email">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      <span className="nav-label">Email</span>
     </div>
-    <!-- Stats -->
-    <div class="nav-item" title="Statistics">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      <span class="nav-label">Stats</span>
+    {/* Stats */}
+    <div className="nav-item" title="Statistics">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span className="nav-label">Stats</span>
     </div>
-    <!-- Contacts -->
-    <div class="nav-item" title="Contacts">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-      <span class="nav-label">Contacts</span>
+    {/* Contacts */}
+    <div className="nav-item" title="Contacts">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span className="nav-label">Contacts</span>
     </div>
-    <!-- Settings -->
-    <div class="nav-item" title="Settings">
-      <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Settings</span>
+    {/* Settings */}
+    <div className="nav-item" title="Settings">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span className="nav-label">Settings</span>
     </div>
   </div>
-  <div class="sidebar-bottom">
-    <div class="avatar-sm">A</div>
+  <div className="sidebar-bottom">
+    <div className="avatar-sm">A</div>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main">
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-title">Email</div>
-    <div class="topbar-right">
-      <button class="icon-btn" title="Search">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+{/* MAIN */}
+<div className="main">
+  {/* TOPBAR */}
+  <div className="topbar">
+    <div className="topbar-title">Email</div>
+    <div className="topbar-right">
+      <button className="icon-btn" title="Search">
+        <svg fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
-      <button class="icon-btn" title="Notifications" style="position:relative">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        <span style="position:absolute;top:6px;right:6px;width:6px;height:6px;background:#ef4444;border-radius:50%;border:1.5px solid #fff;"></span>
+      <button className="icon-btn" title="Notifications" style={{position: "relative"}}>
+        <svg fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span style={{position: "absolute", top: "6px", right: "6px", width: "6px", height: "6px", background: "#ef4444", borderRadius: "50%", border: "1.5px solid #fff"}}></span>
       </button>
-      <div class="topbar-divider"></div>
-      <div class="avatar-sm" style="width:30px;height:30px;font-size:11px;">AJ</div>
-      <button class="topbar-dropdown">
+      <div className="topbar-divider"></div>
+      <div className="avatar-sm" style={{width: "30px", height: "30px", fontSize: "11px"}}>AJ</div>
+      <button className="topbar-dropdown">
         Campaigns
-        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- CONTENT -->
-  <div class="content-area">
+  {/* CONTENT */}
+  <div className="content-area">
 
-    <!-- Campaign Header + Stepper -->
-    <div class="campaign-header">
-      <div class="campaign-title">Campaign configuration</div>
-      <div class="campaign-sub">Go through all steps to configure your campaign</div>
-      <div class="stepper">
-        <div class="step done">
-          <div class="step-circle">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    {/* Campaign Header + Stepper */}
+    <div className="campaign-header">
+      <div className="campaign-title">Campaign configuration</div>
+      <div className="campaign-sub">Go through all steps to configure your campaign</div>
+      <div className="stepper">
+        <div className="step done">
+          <div className="step-circle">
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <span class="step-name">Setup</span>
-          <div class="step-bar done"></div>
+          <span className="step-name">Setup</span>
+          <div className="step-bar done"></div>
         </div>
-        <div class="step done">
-          <div class="step-circle">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <div className="step done">
+          <div className="step-circle">
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <span class="step-name">Audience</span>
-          <div class="step-bar active"></div>
+          <span className="step-name">Audience</span>
+          <div className="step-bar active"></div>
         </div>
-        <div class="step active">
-          <div class="step-circle">3</div>
-          <span class="step-name">Template</span>
-          <div class="step-bar"></div>
+        <div className="step active">
+          <div className="step-circle">3</div>
+          <span className="step-name">Template</span>
+          <div className="step-bar"></div>
         </div>
-        <div class="step">
-          <div class="step-circle">4</div>
-          <span class="step-name">Design</span>
-          <div class="step-bar"></div>
+        <div className="step">
+          <div className="step-circle">4</div>
+          <span className="step-name">Design</span>
+          <div className="step-bar"></div>
         </div>
-        <div class="step">
-          <div class="step-circle">5</div>
-          <span class="step-name">Review</span>
-          <div class="step-bar" style="display:none"></div>
+        <div className="step">
+          <div className="step-circle">5</div>
+          <span className="step-name">Review</span>
+          <div className="step-bar" style={{display: "none"}}></div>
         </div>
       </div>
     </div>
 
-    <!-- 2-column builder -->
-    <div class="builder">
+    {/* 2-column builder */}
+    <div className="builder">
 
-      <!-- CENTER: EMAIL CANVAS -->
-      <div class="canvas-area">
-        <div class="canvas-toolbar">
-          <button class="toolbar-btn active">Desktop</button>
-          <button class="toolbar-btn">Mobile</button>
-          <div class="toolbar-sep"></div>
-          <button class="toolbar-btn">Preview</button>
-          <button class="toolbar-btn">Send test</button>
-          <div style="flex:1"></div>
-          <button class="toolbar-btn">Undo</button>
-          <button class="toolbar-btn">Redo</button>
+      {/* CENTER: EMAIL CANVAS */}
+      <div className="canvas-area">
+        <div className="canvas-toolbar">
+          <button className="toolbar-btn active">Desktop</button>
+          <button className="toolbar-btn">Mobile</button>
+          <div className="toolbar-sep"></div>
+          <button className="toolbar-btn">Preview</button>
+          <button className="toolbar-btn">Send test</button>
+          <div style={{flex: "1"}}></div>
+          <button className="toolbar-btn">Undo</button>
+          <button className="toolbar-btn">Redo</button>
         </div>
 
-        <div class="canvas-scroll">
-          <div class="email-frame">
+        <div className="canvas-scroll">
+          <div className="email-frame">
 
-            <!-- Header -->
-            <div class="email-header">
-              <div class="email-logo-placeholder">YOUR LOGO HERE</div>
-              <div class="email-header-links">
+            {/* Header */}
+            <div className="email-header">
+              <div className="email-logo-placeholder">YOUR LOGO HERE</div>
+              <div className="email-header-links">
                 <span>View online</span>
                 <span>Unsubscribe</span>
               </div>
             </div>
 
-            <!-- Greeting block -->
-            <div class="email-block">
-              <span class="block-tag">TEXT</span>
-              <p class="email-greeting">
+            {/* Greeting block */}
+            <div className="email-block">
+              <span className="block-tag">TEXT</span>
+              <p className="email-greeting">
                 Hi <span>&#123;&#123; person.firstname | default: 'there' &#125;&#125;</span>,<br/>
-                <span style="color:#6b7280;font-size:14px;">We have some exciting products to share with you this week.</span>
+                <span style={{color: "#6b7280", fontSize: "14px"}}>We have some exciting products to share with you this week.</span>
               </p>
             </div>
 
-            <!-- Section 1 -->
-            <div class="email-block">
-              <span class="block-tag">SECTION</span>
-              <div class="email-section-title">Showcase products</div>
-              <p class="email-section-sub">Discover our newest arrivals, crafted for performance and built to last through every challenge.</p>
-              <div class="email-img-placeholder">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            {/* Section 1 */}
+            <div className="email-block">
+              <span className="block-tag">SECTION</span>
+              <div className="email-section-title">Showcase products</div>
+              <p className="email-section-sub">Discover our newest arrivals, crafted for performance and built to last through every challenge.</p>
+              <div className="email-img-placeholder">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                 Drop image here
               </div>
-              <a class="email-cta">Shop Now →</a>
+              <a className="email-cta">Shop Now →</a>
             </div>
 
-            <!-- Section 2 -->
-            <div class="email-block" style="border-bottom:none;">
-              <span class="block-tag">SECTION</span>
-              <div class="email-section-title" style="font-size:16px;">New arrivals this week</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+            {/* Section 2 */}
+            <div className="email-block" style={{borderBottom: "none"}}>
+              <span className="block-tag">SECTION</span>
+              <div className="email-section-title" style={{fontSize: "16px"}}>New arrivals this week</div>
+              <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "10px"}}>
                 <div>
-                  <div class="email-img-placeholder" style="height:100px;font-size:10px;margin:0 0 8px;">Image</div>
-                  <p style="font-size:12px;font-weight:600;color:#1a1a2e;">Product Name</p>
-                  <p style="font-size:11px;color:#6b7280;">$99.00</p>
+                  <div className="email-img-placeholder" style={{height: "100px", fontSize: "10px", margin: "0 0 8px"}}>Image</div>
+                  <p style={{fontSize: "12px", fontWeight: "600", color: "#1a1a2e"}}>Product Name</p>
+                  <p style={{fontSize: "11px", color: "#6b7280"}}>$99.00</p>
                 </div>
                 <div>
-                  <div class="email-img-placeholder" style="height:100px;font-size:10px;margin:0 0 8px;">Image</div>
-                  <p style="font-size:12px;font-weight:600;color:#1a1a2e;">Product Name</p>
-                  <p style="font-size:11px;color:#6b7280;">$149.00</p>
+                  <div className="email-img-placeholder" style={{height: "100px", fontSize: "10px", margin: "0 0 8px"}}>Image</div>
+                  <p style={{fontSize: "12px", fontWeight: "600", color: "#1a1a2e"}}>Product Name</p>
+                  <p style={{fontSize: "11px", color: "#6b7280"}}>$149.00</p>
                 </div>
               </div>
             </div>
 
-            <!-- Footer -->
-            <div class="email-footer-block">
+            {/* Footer */}
+            <div className="email-footer-block">
               <p>You received this email because you signed up for our newsletter.<br/>
-              <a href="#" style="color:#6366f1;text-decoration:none;">Unsubscribe</a> · <a href="#" style="color:#6366f1;text-decoration:none;">Privacy Policy</a></p>
+              <a href="#" style={{color: "#6366f1", textDecoration: "none"}}>Unsubscribe</a> · <a href="#" style={{color: "#6366f1", textDecoration: "none"}}>Privacy Policy</a></p>
             </div>
           </div>
         </div>
 
-        <div class="canvas-actions">
-          <button class="btn-ghost">← Return</button>
-          <div class="canvas-actions-right">
-            <button class="btn-secondary">Save & Exit</button>
-            <button class="btn-primary">Continue →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: COMPONENT PANEL -->
-      <div class="right-panel">
-        <div class="panel-tabs">
-          <div class="panel-tab active">Content</div>
-          <div class="panel-tab">Rows</div>
-          <div class="panel-tab">Settings</div>
-        </div>
-        <div class="panel-body">
-          <div class="panel-section">
-            <div class="panel-section-title">Content Blocks</div>
-            <div class="component-grid">
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                <span class="component-label">Text</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                <span class="component-label">Image</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>
-                <span class="component-label">Button</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 12h16"/></svg>
-                <span class="component-label">Divider</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
-                <span class="component-label">Share</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                <span class="component-label">HTML</span>
-              </div>
-              <div class="component-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                <span class="component-label">Video</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel-section">
-            <div class="panel-section-title">Row Layouts</div>
-            <div class="row-item">
-              <div class="row-preview"><div class="row-col"></div></div>
-              <span class="row-label">Full width</span>
-            </div>
-            <div class="row-item">
-              <div class="row-preview"><div class="row-col"></div><div class="row-col"></div></div>
-              <span class="row-label">Two columns</span>
-            </div>
-            <div class="row-item">
-              <div class="row-preview"><div class="row-col"></div><div class="row-col"></div><div class="row-col"></div></div>
-              <span class="row-label">Three columns</span>
-            </div>
-            <div class="row-item">
-              <div class="row-preview"><div class="row-col" style="flex:2"></div><div class="row-col"></div></div>
-              <span class="row-label">2/3 + 1/3</span>
-            </div>
-          </div>
-
-          <div class="panel-section">
-            <div class="panel-section-title">Active Block Settings</div>
-            <div style="background:#f9fafb;border:1px solid var(--border);border-radius:6px;padding:12px;">
-              <p style="font-size:12px;color:var(--text-light);text-align:center;padding:8px 0;">Select a block in the canvas to edit its settings</p>
-            </div>
+        <div className="canvas-actions">
+          <button className="btn-ghost">← Return</button>
+          <div className="canvas-actions-right">
+            <button className="btn-secondary">Save & Exit</button>
+            <button className="btn-primary">Continue →</button>
           </div>
         </div>
       </div>
 
-    </div><!-- /builder -->
+      {/* RIGHT: COMPONENT PANEL */}
+      <div className="right-panel">
+        <div className="panel-tabs">
+          <div className="panel-tab active">Content</div>
+          <div className="panel-tab">Rows</div>
+          <div className="panel-tab">Settings</div>
+        </div>
+        <div className="panel-body">
+          <div className="panel-section">
+            <div className="panel-section-title">Content Blocks</div>
+            <div className="component-grid">
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                <span className="component-label">Text</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span className="component-label">Image</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>
+                <span className="component-label">Button</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><path d="M4 12h16"/></svg>
+                <span className="component-label">Divider</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+                <span className="component-label">Share</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span className="component-label">HTML</span>
+              </div>
+              <div className="component-item">
+                <svg fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <span className="component-label">Video</span>
+              </div>
+            </div>
+          </div>
 
-  </div><!-- /content-area -->
-</div><!-- /main -->
+          <div className="panel-section">
+            <div className="panel-section-title">Row Layouts</div>
+            <div className="row-item">
+              <div className="row-preview"><div className="row-col"></div></div>
+              <span className="row-label">Full width</span>
+            </div>
+            <div className="row-item">
+              <div className="row-preview"><div className="row-col"></div><div className="row-col"></div></div>
+              <span className="row-label">Two columns</span>
+            </div>
+            <div className="row-item">
+              <div className="row-preview"><div className="row-col"></div><div className="row-col"></div><div className="row-col"></div></div>
+              <span className="row-label">Three columns</span>
+            </div>
+            <div className="row-item">
+              <div className="row-preview"><div className="row-col" style={{flex: "2"}}></div><div className="row-col"></div></div>
+              <span className="row-label">2/3 + 1/3</span>
+            </div>
+          </div>
 
-</body>
-</html>
+          <div className="panel-section">
+            <div className="panel-section-title">Active Block Settings</div>
+            <div style={{background: "#f9fafb", border: "1px solid var(--border)", borderRadius: "6px", padding: "12px"}}>
+              <p style={{fontSize: "12px", color: "var(--text-light)", textAlign: "center", padding: "8px 0"}}>Select a block in the canvas to edit its settings</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>{/* /builder */}
+
+  </div>{/* /content-area */}
+</div>{/* /main */}
+    </>
+  );
+}
