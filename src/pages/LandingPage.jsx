@@ -61,6 +61,7 @@ export default function LandingPage() {
     position: relative; min-height: 100vh;
     display: flex; align-items: center;
     overflow: hidden;
+    padding-top: 60px;
   }
   .hero-bg {
     position: absolute; inset: 0;
@@ -122,7 +123,7 @@ export default function LandingPage() {
     position: relative; z-index: 10;
     padding: 0 80px 0 80px;
     max-width: 620px;
-    padding-top: 100px;
+    padding-top:20px;
   }
   .hero-eyebrow {
     font-size: 10px; font-weight: 500;
@@ -134,7 +135,7 @@ export default function LandingPage() {
     font-size: clamp(52px, 7vw, 86px);
     font-weight: 300; line-height: 1.05;
     color: var(--white);
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
   .hero-h1 em {
     font-style: normal;
@@ -144,7 +145,7 @@ export default function LandingPage() {
   .hero-desc {
     font-size: 15px; line-height: 1.75;
     color: var(--muted); max-width: 400px;
-    margin-bottom: 40px; font-weight: 300;
+    margin-bottom: 28px; font-weight: 300;
   }
   .hero-cta {
     display: inline-flex; align-items: center; gap: 10px;
