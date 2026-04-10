@@ -16,16 +16,18 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (form.password.length < 6) {
       return toast.error('Password must be at least 6 characters');
     }
+
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', form);
       setAuth(data.user, data.token);
       initSocket(data.token);
       toast.success(`Welcome to LiveCollab, ${data.user.name}!`);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -34,9 +36,15 @@ export default function RegisterPage() {
   };
 
   const handleGoogleRegister = () => {
-    setGoogleLoading(true);
-    const baseURL = import.meta.env.VITE_API_URL || '/api';
-    window.location.href = `${baseURL}/auth/google`;
+    try {
+      setGoogleLoading(true);
+
+      const baseURL = import.meta.env.VITE_API_URL || '/api';
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
+    } catch (err) {
+      setGoogleLoading(false);
+      toast.error('Could not start Google sign-in');
+    }
   };
 
   return (
@@ -66,9 +74,15 @@ export default function RegisterPage() {
             className="w-full mb-5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {googleLoading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Connecting...
+              </>
             ) : (
-              <><Globe className="w-5 h-5" /> Continue with Google</>
+              <>
+                <Globe className="w-5 h-5" />
+                Continue with Google
+              </>
             )}
           </button>
 
@@ -85,7 +99,7 @@ export default function RegisterPage() {
                 type="text"
                 required
                 value={form.name}
-                onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 placeholder="Jane Smith"
               />
@@ -98,7 +112,7 @@ export default function RegisterPage() {
                 required
                 autoComplete="email"
                 value={form.email}
-                onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 placeholder="you@example.com"
               />
@@ -112,13 +126,13 @@ export default function RegisterPage() {
                   required
                   autoComplete="new-password"
                   value={form.password}
-                  onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                   placeholder="Min. 6 characters"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass(v => !v)}
+                  onClick={() => setShowPass((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
                 >
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -132,8 +146,13 @@ export default function RegisterPage() {
               className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Creating account...</>
-              ) : 'Create account'}
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
 

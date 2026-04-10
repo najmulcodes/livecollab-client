@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 const Protected = ({ children }) => {
   const { user } = useAuthStore();
@@ -19,6 +21,7 @@ const Guest = ({ children }) => {
 export default function App() {
   return (
     <Routes>
+      <Route path="/auth/callback" element={<Guest><AuthCallbackPage /></Guest>} />
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Guest><LoginPage /></Guest>} />
       <Route path="/register" element={<Guest><RegisterPage /></Guest>} />

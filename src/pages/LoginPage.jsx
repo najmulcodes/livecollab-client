@@ -33,7 +33,7 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     const baseURL = import.meta.env.VITE_API_URL || '/api';
-    window.location.href = `${baseURL}/auth/google`;
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
   };
 
   return (
