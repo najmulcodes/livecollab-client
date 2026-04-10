@@ -12,21 +12,22 @@ import Sidebar from '../components/layout/Sidebar';
 
 export default function WorkspacePage() {
   const { id } = useParams();
-  const { user, token } = useAuthStore();
+  const navigate = useNavigate();
+  const { token } = useAuthStore();
   const { setBoard, setActivities } = useBoardStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Init socket if not already
+  // Ensure socket is live (handles page refresh where socket wasn't inited)
   useEffect(() => {
     if (token) initSocket(token);
   }, [token]);
 
-  // Attach socket listeners for this workspace
   useWorkspaceSocket(id);
 
   const { data: workspace, isLoading: wsLoading, error: wsError } = useQuery({
     queryKey: ['workspace', id],
     queryFn: () => api.get(`/workspaces/${id}`).then(r => r.data),
+    enabled: !!id,
   });
 
   const { data: board, isLoading: boardLoading } = useQuery({
@@ -39,28 +40,39 @@ export default function WorkspacePage() {
     queryKey: ['activities', id],
     queryFn: () => api.get(`/activities/${id}`).then(r => r.data),
     enabled: !!id,
-    refetchInterval: 30000,
+    refetchInterval: 30_000,
   });
 
-  useEffect(() => { if (board) setBoard(board); }, [board]);
-  useEffect(() => { if (activities) setActivities(activities); }, [activities]);
+  // Sync server data into Zustand store
+  useEffect(() => {
+    if (board) setBoard(board);
+  }, [board, setBoard]);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (activities) setActivities(activities);
+  }, [activities, setActivities]);
 
-  if (wsLoading || boardLoading) return (
-    <div className="min-h-screen bg-[#0f0e1a] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
-    </div>
-  );
+  if (wsLoading || boardLoading) {
+    return (
+      <div className="min-h-screen bg-[#0f0e1a] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
+      </div>
+    );
+  }
 
-  if (wsError) return (
-    <div className="min-h-screen bg-[#0f0e1a] flex flex-col items-center justify-center gap-4">
-      <p className="text-red-400">Failed to load workspace</p>
-      <button onClick={() => navigate('/dashboard')} className="text-brand-400 hover:text-brand-300 flex items-center gap-2 text-sm">
-        <ArrowLeft className="w-4 h-4" /> Go back
-      </button>
-    </div>
-  );
+  if (wsError) {
+    return (
+      <div className="min-h-screen bg-[#0f0e1a] flex flex-col items-center justify-center gap-4">
+        <p className="text-red-400">Failed to load workspace</p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="text-brand-400 hover:text-brand-300 flex items-center gap-2 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" /> Go back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-[#0f0e1a] flex overflow-hidden">
@@ -81,12 +93,17 @@ export default function WorkspacePage() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-400 hover:text-white transition-colors">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden text-slate-400 hover:text-white transition-colors"
+          >
             <Menu className="w-5 h-5" />
           </button>
-          <button onClick={() => navigate('/dashboard')} className="text-slate-400 hover:text-white transition-colors">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
@@ -95,7 +112,6 @@ export default function WorkspacePage() {
           </div>
         </div>
 
-        {/* Board */}
         <div className="flex-1 overflow-hidden flex">
           <KanbanBoard workspaceId={id} members={workspace?.members || []} />
         </div>

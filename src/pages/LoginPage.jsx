@@ -17,13 +17,12 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const { data } = await api.post('/auth/login', form);
       setAuth(data.user, data.token);
       initSocket(data.token);
       toast.success(`Welcome back, ${data.user.name}!`);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -32,15 +31,9 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    try {
-      setGoogleLoading(true);
-
-      const baseURL = api.defaults?.baseURL || '';
-      window.location.href = `${baseURL}/auth/google`;
-    } catch (err) {
-      setGoogleLoading(false);
-      toast.error('Could not start Google sign-in');
-    }
+    setGoogleLoading(true);
+    const baseURL = import.meta.env.VITE_API_URL || '/api';
+    window.location.href = `${baseURL}/auth/google`;
   };
 
   return (
@@ -71,15 +64,9 @@ export default function LoginPage() {
             className="w-full mb-5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {googleLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Connecting...
-              </>
+              <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
             ) : (
-              <>
-                <Globe className="w-5 h-5" />
-                Continue with Google
-              </>
+              <><Globe className="w-5 h-5" /> Continue with Google</>
             )}
           </button>
 
@@ -97,7 +84,7 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 placeholder="you@example.com"
               />
@@ -111,13 +98,13 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                  onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass((v) => !v)}
+                  onClick={() => setShowPass(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
                 >
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -131,13 +118,8 @@ export default function LoginPage() {
               className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
             >
               {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
-              )}
+                <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
+              ) : 'Sign in'}
             </button>
           </form>
 
