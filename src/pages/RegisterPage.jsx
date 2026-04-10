@@ -27,7 +27,7 @@ export default function RegisterPage() {
       setAuth(data.user, data.token);
       initSocket(data.token);
       toast.success(`Welcome to LiveCollab, ${data.user.name}!`);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -39,7 +39,6 @@ export default function RegisterPage() {
     try {
       setGoogleLoading(true);
 
-      const baseURL = import.meta.env.VITE_API_URL || '/api';
     window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
     } catch (err) {
       setGoogleLoading(false);
