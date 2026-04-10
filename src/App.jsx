@@ -6,8 +6,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-
 const Protected = ({ children }) => {
   const { user } = useAuthStore();
   return user ? children : <Navigate to="/login" replace />;
