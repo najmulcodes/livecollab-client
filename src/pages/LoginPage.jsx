@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Loader2, Chrome } from 'lucide-react';
+import { Zap, Eye, EyeOff, Loader2, Globe } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import { initSocket } from '../socket/socket';
@@ -77,7 +77,7 @@ export default function LoginPage() {
               </>
             ) : (
               <>
-                <Chrome className="w-5 h-5" />
+                <Globe className="w-5 h-5" />
                 Continue with Google
               </>
             )}

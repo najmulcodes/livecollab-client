@@ -80,7 +80,7 @@ export default function RegisterPage() {
               </>
             ) : (
               <>
-                <Chrome className="w-5 h-5" />
+                <Globe className="w-5 h-5" />
                 Continue with Google
               </>
             )}
