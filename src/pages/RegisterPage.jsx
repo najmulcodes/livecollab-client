@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Zap, Eye, EyeOff, Loader2, Chrome } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import { initSocket } from '../socket/socket';
@@ -10,12 +10,17 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
+
+    if (form.password.length < 6) {
+      return toast.error('Password must be at least 6 characters');
+    }
+
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', form);
@@ -27,6 +32,18 @@ export default function RegisterPage() {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleRegister = () => {
+    try {
+      setGoogleLoading(true);
+
+      const baseURL = api.defaults?.baseURL || '';
+      window.location.href = `${baseURL}/auth/google`;
+    } catch (err) {
+      setGoogleLoading(false);
+      toast.error('Could not start Google sign-in');
     }
   };
 
@@ -50,50 +67,100 @@ export default function RegisterPage() {
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-modal">
+          <button
+            type="button"
+            onClick={handleGoogleRegister}
+            disabled={googleLoading}
+            className="w-full mb-5 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {googleLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Chrome className="w-5 h-5" />
+                Continue with Google
+              </>
+            )}
+          </button>
+
+          <div className="flex items-center gap-3 my-5">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">Full Name</label>
               <input
-                type="text" required
-                value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                type="text"
+                required
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 placeholder="Jane Smith"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
               <input
-                type="email" required
-                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                type="email"
+                required
+                autoComplete="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 placeholder="you@example.com"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
               <div className="relative">
                 <input
-                  type={showPass ? 'text' : 'password'} required
-                  value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                   placeholder="Min. 6 characters"
                 />
-                <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                >
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
+
             <button
-              type="submit" disabled={loading}
+              type="submit"
+              disabled={loading}
               className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
             >
-              {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Creating account...</> : 'Create account'}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
 
           <p className="text-center text-slate-400 mt-6 text-sm">
             Already have an account?{' '}
-            <Link to="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">Sign in</Link>
+            <Link to="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
