@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { initSocket } from '../socket/socket';
-import api from '../lib/api';
+import axiosInstance from '../lib/axios';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -18,47 +18,62 @@ export default function AuthCallbackPage() {
     const token = params.get('token');
     const oauthError = params.get('error');
 
+    console.log('[OAuth] token present:', !!token);
+    console.log('[OAuth] baseURL:', axiosInstance.defaults.baseURL);
+
     if (oauthError || !token) {
-      console.error('OAuth error param:', oauthError);
       navigate('/login?error=oauth_failed', { replace: true });
       return;
     }
 
-    api
+    // ✅ Call directly with token in header — bypass interceptor timing
+    axiosInstance
       .get('/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(({ data }) => {
+        console.log('[OAuth] me response:', data);
         const user = data.user;
-        if (!user) throw new Error('No user in response');
-
-        // write to localStorage + Zustand synchronously
+        if (!user) throw new Error('No user returned');
         setAuth(user, token);
         initSocket(token);
-
-        // Small tick to let Zustand propagate before Protected route checks
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 0);
+        setTimeout(() => navigate('/dashboard', { replace: true }), 0);
       })
       .catch((err) => {
-        console.error('OAuth /auth/me failed:', err?.response?.data || err.message);
-        setError(err?.response?.data?.message || 'Authentication failed');
-        setTimeout(() => navigate('/login', { replace: true }), 2000);
+        console.error('[OAuth] failed:', err?.response?.status, err?.response?.data);
+        setError(err?.response?.data?.message || err?.message || 'Authentication failed');
+        setTimeout(() => navigate('/login', { replace: true }), 2500);
       });
   }, [navigate, setAuth]);
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0f0e1a] flex items-center justify-center">
-        <div className="text-red-400 text-sm">{error} — redirecting to login...</div>
+      <div style={{
+        minHeight: '100vh',
+        background: '#0b0b0c',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        <p style={{ color: '#ef4444', fontSize: '14px' }}>{error} — redirecting...</p>
+        <p style={{ color: '#555', fontSize: '12px' }}>Check browser console for details</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0e1a] flex items-center justify-center">
-      <div className="text-slate-400 text-sm animate-pulse">Signing you in...</div>
+    <div style={{
+      minHeight: '100vh',
+      background: '#0b0b0c',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: '14px' }}>Signing you in...</p>
     </div>
   );
 }

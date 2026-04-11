@@ -1,54 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg:          #0b0b0c;
+  --amber:       #e8a24a;
+  --amber-dim:   #b87930;
+  --amber-glow:  rgba(232,162,74,0.15);
+  --white:       #f0ede8;
+  --muted:       rgba(240,237,232,0.5);
+  --subtle:      rgba(240,237,232,0.18);
+  --glass:       rgba(255,255,255,0.04);
+  --glass-border:rgba(255,255,255,0.08);
+  --brand:       #e8a24a;
+}
+
 @layer base {
-  * { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    background: #0f0e1a;
-    color: #e2e8f0;
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #3730a3; border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: #4338ca; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(232,162,74,0.3); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(232,162,74,0.5); }
+
+  input, textarea, select { font-family: inherit; }
 }
 
 @layer utilities {
+  /* ── Glass panels ── */
   .glass {
-    background: rgba(30, 27, 75, 0.7);
+    background: rgba(20, 18, 14, 0.85);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(232, 162, 74, 0.15);
   }
   .glass-light {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
+
+  /* ── Typography ── */
   .text-gradient {
-    background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%);
+    background: linear-gradient(135deg, #f0c070 0%, #e8a24a 50%, #b87930 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .card-column {
-    background: rgba(15, 14, 26, 0.8);
-    border: 1px solid rgba(99, 102, 241, 0.12);
+  .font-display {
+    font-family: 'Cormorant Garamond', serif;
   }
+
+  /* ── Amber glow effects ── */
+  .glow-amber {
+    box-shadow: 0 0 40px rgba(232,162,74,0.2);
+  }
+  .glow-amber-sm {
+    box-shadow: 0 4px 20px rgba(232,162,74,0.25);
+  }
+
+  /* ── Card styles ── */
+  .card-dark {
+    background: rgba(20, 18, 14, 0.9);
+    border: 1px solid rgba(232, 162, 74, 0.12);
+  }
+  .card-column {
+    background: rgba(11, 11, 12, 0.8);
+    border: 1px solid rgba(232, 162, 74, 0.1);
+  }
+
+  /* ── Status dot ── */
   .dot-online {
-    width: 8px; height: 8px; border-radius: 50%; background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e8a24a;
+    box-shadow: 0 0 0 2px rgba(232, 162, 74, 0.3);
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 16px;
   }
 }
 
+/* ── Drag overlay ── */
 .drag-overlay {
   transform: rotate(2deg) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-  opacity: 0.9;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0.92;
 }
 
-input, textarea, select {
-  font-family: inherit;
+/* ── Ambient background used on auth pages ── */
+.page-bg {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+.page-bg::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(232,162,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-bg::after {
+  content: '';
+  position: fixed;
+  bottom: -200px; right: -200px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(184,121,48,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
