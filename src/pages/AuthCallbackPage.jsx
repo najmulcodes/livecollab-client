@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { initSocket } from '../socket/socket';
@@ -7,44 +7,35 @@ import api from '../lib/api';
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
+  const didRun = useRef(false); // ✅ FIX 2: prevent double-fire in StrictMode
 
   useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
+
     const token = new URLSearchParams(window.location.search).get('token');
 
     if (!token) {
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
 
-    // ✅ Save token immediately (prevents redirect loop)
-    localStorage.setItem('lc_token', token);
-
+    // ✅ FIX 3: pass token directly in header — don't rely on interceptor
+    // because localStorage may not be read yet by the interceptor
     api.get('/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(({ data }) => {
-        // ✅ Important: backend returns { user: {...} }
         const user = data.user;
-
-        // ✅ Save to Zustand + localStorage
+        // ✅ setAuth writes to both localStorage AND Zustand atomically
         setAuth(user, token);
-
-        // ✅ Init socket AFTER auth
         initSocket(token);
-
-        // ✅ Final redirect
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       })
       .catch((err) => {
-        console.error('OAuth error:', err);
-
-        // cleanup
-        localStorage.removeItem('lc_token');
-        localStorage.removeItem('lc_user');
-
-        navigate('/login');
+        console.error('OAuth callback error:', err);
+        navigate('/login', { replace: true });
       });
-
   }, [navigate, setAuth]);
 
   return (
