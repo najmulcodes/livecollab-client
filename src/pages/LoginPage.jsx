@@ -39,21 +39,64 @@ export default function LoginPage() {
     <div className="page-bg flex items-center justify-center min-h-screen">
       <div className="relative z-10 w-full max-w-md mx-6">
 
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <a href="/" style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: '28px', fontWeight: 600,
-            letterSpacing: '0.12em', color: '#f0ede8',
-            textDecoration: 'none', display: 'inline-block',
-            marginBottom: '8px',
-          }}>
-            LIVECOLLAB
-          </a>
-          <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: '14px', fontWeight: 300 }}>
-            Sign in to your workspace
-          </p>
-        </div>
+        {/* Logo Section */}
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: '16px',
+  }}
+>
+  {/* Logo Row */}
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: '28px',
+      fontWeight: 600,
+      letterSpacing: '0.12em',
+      color: '#f0ede8',
+    }}
+  >
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <path d="M8 8 L20 28 L23 21 L29 18 Z" fill="#6366f1" />
+      <circle cx="27" cy="7" r="3.5" fill="#e8a24a" />
+      <line
+        x1="10"
+        y1="8"
+        x2="27"
+        y2="7"
+        stroke="rgba(232,162,74,0.4)"
+        strokeWidth="1.5"
+      />
+    </svg>
+
+    <a
+      href="/"
+      style={{
+        color: '#f0ede8',
+        textDecoration: 'none',
+      }}
+    >
+      LIVECOLLAB
+    </a>
+  </div>
+
+  {/* Subtitle */}
+  <p
+    style={{
+      color: 'rgba(240,237,232,0.45)',
+      fontSize: '14px',
+      fontWeight: 300,
+      marginTop: '4px',
+    }}
+  >
+    Sign in to your workspace
+  </p>
+</div>
 
         {/* Card */}
         <div className="glass rounded-sm p-8" style={{ borderRadius: '2px' }}>
@@ -66,7 +109,7 @@ export default function LoginPage() {
             style={{
               width: '100%', display: 'flex', alignItems: 'center',
               justifyContent: 'center', gap: '10px',
-              padding: '12px 24px', marginBottom: '24px',
+              padding: '12px 24px', marginBottom: '20px',
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '2px', cursor: 'pointer',
@@ -93,14 +136,14 @@ export default function LoginPage() {
           </button>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             <span style={{ color: 'rgba(240,237,232,0.3)', fontSize: '11px', letterSpacing: '0.1em' }}>OR</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
               <label style={{
                 display: 'block', fontSize: '11px', fontWeight: 500,
