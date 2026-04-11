@@ -10,11 +10,9 @@ import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import { disconnectSocket } from '../socket/socket';
 
-// ── Emoji / color pickers ─────────────────────────────────────────────────────
 const ICONS = ['🚀', '💡', '🎯', '🔥', '⚡', '🛠️', '📦', '🌊', '🎨', '🧠', '📊', '🌿'];
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6'];
 
-// ── Tiny avatar ───────────────────────────────────────────────────────────────
 function Avatar({ user, size = 8 }) {
   return (
     <div
@@ -26,7 +24,6 @@ function Avatar({ user, size = 8 }) {
   );
 }
 
-// ── Workspace card ─────────────────────────────────────────────────────────────
 function WorkspaceCard({ ws, onClick }) {
   return (
     <button
@@ -51,7 +48,6 @@ function WorkspaceCard({ ws, onClick }) {
   );
 }
 
-// ── Modal base ─────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -69,7 +65,6 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-// ── Create workspace modal ─────────────────────────────────────────────────────
 function CreateModal({ onClose }) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🚀');
@@ -151,19 +146,18 @@ function CreateModal({ onClose }) {
   );
 }
 
-// ── Join workspace modal ───────────────────────────────────────────────────────
 function JoinModal({ onClose }) {
   const [code, setCode] = useState('');
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (inviteCode) => api.post('/workspaces/join', { inviteCode }).then(r => r.data),
-    onSuccess: (ws) => {
+    mutationFn: (inviteCode) => api.post(`/workspaces/join/${inviteCode}`).then(r => r.data),
+    onSuccess: (data) => {
       qc.invalidateQueries(['workspaces']);
-      toast.success(`Joined ${ws.name}!`);
+      toast.success(`Joined ${data.workspace.name}!`);
       onClose();
-      navigate(`/workspace/${ws._id}`);
+      navigate(`/workspace/${data.workspace._id}`);
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Invalid invite code'),
   });
@@ -196,16 +190,17 @@ function JoinModal({ onClose }) {
   );
 }
 
-// ── Main dashboard ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [modal, setModal] = useState(null); // 'create' | 'join' | null
+  const [modal, setModal] = useState(null);
 
-  const { data: workspaces = [], isLoading } = useQuery({
+  // ✅ FIX: extract .workspaces from response
+  const { data, isLoading } = useQuery({
     queryKey: ['workspaces'],
     queryFn: () => api.get('/workspaces').then(r => r.data),
   });
+  const workspaces = data?.workspaces ?? [];
 
   const handleLogout = () => {
     disconnectSocket();
@@ -215,13 +210,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0e1a]">
-      {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-60 -left-60 w-[500px] h-[500px] bg-brand-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Nav */}
       <header className="relative border-b border-white/5 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
@@ -247,9 +240,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Content */}
       <main className="relative max-w-5xl mx-auto px-6 py-10">
-        {/* Page heading */}
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs text-brand-400 font-medium tracking-widest uppercase mb-1">Your workspaces</p>
@@ -273,7 +264,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Workspace grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
@@ -311,7 +301,6 @@ export default function DashboardPage() {
                 onClick={() => navigate(`/workspace/${ws._id}`)}
               />
             ))}
-            {/* Ghost create card */}
             <button
               onClick={() => setModal('create')}
               className="group h-full min-h-[110px] rounded-2xl border border-dashed border-white/10 hover:border-brand-500/40 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-brand-400 transition-all"
@@ -323,7 +312,6 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Modals */}
       {modal === 'create' && <CreateModal onClose={() => setModal(null)} />}
       {modal === 'join' && <JoinModal onClose={() => setModal(null)} />}
     </div>

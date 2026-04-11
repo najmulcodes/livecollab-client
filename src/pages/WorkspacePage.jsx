@@ -17,39 +17,46 @@ export default function WorkspacePage() {
   const { setBoard, setActivities } = useBoardStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Ensure socket is live (handles page refresh where socket wasn't inited)
   useEffect(() => {
     if (token) initSocket(token);
   }, [token]);
 
   useWorkspaceSocket(id);
 
-  const { data: workspace, isLoading: wsLoading, error: wsError } = useQuery({
+  // ✅ FIX: extract .workspace from response
+  const { data: wsData, isLoading: wsLoading, error: wsError } = useQuery({
     queryKey: ['workspace', id],
     queryFn: () => api.get(`/workspaces/${id}`).then(r => r.data),
     enabled: !!id,
   });
+  const workspace = wsData?.workspace ?? null;
 
-  const { data: board, isLoading: boardLoading } = useQuery({
+  // ✅ FIX: extract .cards from response
+  const { data: boardData, isLoading: boardLoading } = useQuery({
     queryKey: ['board', id],
-    queryFn: () => api.get(`/boards/${id}`).then(r => r.data),
+    queryFn: () => api.get(`/boards/${id}/cards`).then(r => r.data),
     enabled: !!id,
   });
+  const cards = boardData?.cards ?? [];
 
-  const { data: activities } = useQuery({
+  // ✅ FIX: extract .activities from response (handles both array and object)
+  const { data: activitiesData } = useQuery({
     queryKey: ['activities', id],
     queryFn: () => api.get(`/activities/${id}`).then(r => r.data),
     enabled: !!id,
     refetchInterval: 30_000,
   });
+  const activities = Array.isArray(activitiesData)
+    ? activitiesData
+    : (activitiesData?.activities ?? []);
 
-  // Sync server data into Zustand store
+  // Sync into Zustand store
   useEffect(() => {
-    if (board) setBoard(board);
-  }, [board, setBoard]);
+    if (cards.length > 0) setBoard({ cards });
+  }, [cards, setBoard]);
 
   useEffect(() => {
-    if (activities) setActivities(activities);
+    if (activities.length > 0) setActivities(activities);
   }, [activities, setActivities]);
 
   if (wsLoading || boardLoading) {
@@ -76,7 +83,6 @@ export default function WorkspacePage() {
 
   return (
     <div className="h-screen bg-[#0f0e1a] flex overflow-hidden">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
@@ -86,12 +92,10 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* Desktop sidebar */}
       <div className="hidden lg:flex">
         <Sidebar workspace={workspace} />
       </div>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
           <button

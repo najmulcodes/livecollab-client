@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-// ✅ This must point to your Render backend, not Vercel
-// Set VITE_API_URL in Vercel dashboard → Settings → Environment Variables
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 console.log('[api] baseURL:', BASE_URL); // remove after debugging
 
@@ -21,7 +19,6 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      // ✅ Don't redirect if we're already on the oauth-success page
       if (!window.location.pathname.includes('oauth-success')) {
         localStorage.removeItem('lc_token');
         localStorage.removeItem('lc_user');
@@ -32,4 +29,4 @@ api.interceptors.response.use(
   }
 );
 
-export { default } from './axios';
+export default api;

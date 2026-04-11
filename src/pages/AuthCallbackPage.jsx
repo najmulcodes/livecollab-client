@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { initSocket } from '../socket/socket';
-import axiosInstance from '../lib/axios';
+import axiosInstance from '../lib/api';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
