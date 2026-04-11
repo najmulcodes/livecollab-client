@@ -23,7 +23,6 @@ export default function WorkspacePage() {
 
   useWorkspaceSocket(id);
 
-  // ✅ FIX: extract .workspace from response
   const { data: wsData, isLoading: wsLoading, error: wsError } = useQuery({
     queryKey: ['workspace', id],
     queryFn: () => api.get(`/workspaces/${id}`).then(r => r.data),
@@ -31,7 +30,6 @@ export default function WorkspacePage() {
   });
   const workspace = wsData?.workspace ?? null;
 
-  // ✅ FIX: extract .cards from response
   const { data: boardData, isLoading: boardLoading } = useQuery({
     queryKey: ['board', id],
     queryFn: () => api.get(`/boards/${id}/cards`).then(r => r.data),
@@ -39,7 +37,6 @@ export default function WorkspacePage() {
   });
   const cards = boardData?.cards ?? [];
 
-  // ✅ FIX: extract .activities from response (handles both array and object)
   const { data: activitiesData } = useQuery({
     queryKey: ['activities', id],
     queryFn: () => api.get(`/activities/${id}`).then(r => r.data),
@@ -50,73 +47,136 @@ export default function WorkspacePage() {
     ? activitiesData
     : (activitiesData?.activities ?? []);
 
-  // Sync into Zustand store
-  useEffect(() => {
-    if (cards.length > 0) setBoard({ cards });
-  }, [cards, setBoard]);
-
-  useEffect(() => {
-    if (activities.length > 0) setActivities(activities);
-  }, [activities, setActivities]);
+  useEffect(() => { if (cards.length > 0) setBoard({ cards }); }, [cards, setBoard]);
+  useEffect(() => { if (activities.length > 0) setActivities(activities); }, [activities, setActivities]);
 
   if (wsLoading || boardLoading) {
     return (
-      <div className="min-h-screen bg-[#0f0e1a] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
+      <div style={{
+        minHeight:'100vh', background:'#0b0b0c',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontFamily:"'DM Sans',sans-serif",
+      }}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'16px' }}>
+          <Loader2 style={{ width:28, height:28, color:'#e8a24a', animation:'spin 1s linear infinite' }} />
+          <span style={{ fontSize:'12px', letterSpacing:'0.15em', color:'rgba(240,237,232,0.35)' }}>
+            LOADING WORKSPACE
+          </span>
+        </div>
       </div>
     );
   }
 
   if (wsError) {
     return (
-      <div className="min-h-screen bg-[#0f0e1a] flex flex-col items-center justify-center gap-4">
-        <p className="text-red-400">Failed to load workspace</p>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-brand-400 hover:text-brand-300 flex items-center gap-2 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" /> Go back
+      <div style={{
+        minHeight:'100vh', background:'#0b0b0c',
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'16px',
+        fontFamily:"'DM Sans',sans-serif",
+      }}>
+        <p style={{ color:'rgba(240,237,232,0.5)', fontSize:'14px' }}>Failed to load workspace</p>
+        <button onClick={() => navigate('/dashboard')} style={{
+          display:'flex', alignItems:'center', gap:'6px',
+          fontSize:'12px', letterSpacing:'0.08em', color:'#e8a24a',
+          background:'none', border:'none', cursor:'pointer', fontFamily:'inherit',
+        }}>
+          <ArrowLeft style={{ width:14, height:14 }} /> BACK TO DASHBOARD
         </button>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-[#0f0e1a] flex overflow-hidden">
+    <div style={{
+      height:'100vh', background:'#0b0b0c',
+      display:'flex', overflow:'hidden',
+      fontFamily:"'DM Sans',sans-serif", color:'#f0ede8',
+    }}>
+
+      {/* mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <div className="relative z-50 h-full">
+        <div style={{ position:'fixed', inset:0, zIndex:40 }}>
+          <div
+            style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)' }}
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div style={{ position:'relative', zIndex:50, height:'100%' }}>
             <Sidebar workspace={workspace} onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}
 
+      {/* desktop sidebar */}
       <div className="hidden lg:flex">
         <Sidebar workspace={workspace} />
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+      {/* main content */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+        {/* topbar */}
+        <div style={{
+          display:'flex', alignItems:'center', gap:'12px',
+          padding:'14px 24px',
+          borderBottom:'1px solid rgba(232,162,74,0.1)',
+          background:'rgba(11,11,12,0.8)',
+          backdropFilter:'blur(10px)',
+        }}>
+          {/* mobile menu */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-slate-400 hover:text-white transition-colors"
+            className="lg:hidden"
+            style={{
+              background:'none', border:'none', cursor:'pointer',
+              color:'rgba(240,237,232,0.4)', padding:'4px',
+              display:'flex', alignItems:'center', transition:'color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color='#f0ede8'}
+            onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.4)'}
           >
-            <Menu className="w-5 h-5" />
+            <Menu style={{ width:18, height:18 }} />
           </button>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="text-slate-400 hover:text-white transition-colors"
+
+          {/* back */}
+          <button onClick={() => navigate('/dashboard')} style={{
+            background:'none', border:'none', cursor:'pointer',
+            color:'rgba(240,237,232,0.4)', padding:'4px',
+            display:'flex', alignItems:'center', transition:'color 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color='#e8a24a'}
+            onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.4)'}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft style={{ width:16, height:16 }} />
           </button>
+
+          <div style={{ width:'1px', height:'20px', background:'rgba(255,255,255,0.08)' }} />
+
           <div>
-            <h1 className="text-base font-semibold text-white">{workspace?.name}</h1>
-            <p className="text-xs text-slate-500">Task Board</p>
+            <h1 style={{ fontSize:'15px', fontWeight:500, color:'#f0ede8', margin:0, letterSpacing:'0.02em' }}>
+              {workspace?.name}
+            </h1>
+            <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.35)', margin:0, letterSpacing:'0.08em' }}>
+              TASK BOARD
+            </p>
           </div>
+
+          {/* workspace accent dot */}
+          {workspace?.color && (
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:'8px' }}>
+              <div style={{
+                width:'8px', height:'8px', borderRadius:'50%',
+                background: workspace.color,
+                boxShadow:`0 0 8px ${workspace.color}60`,
+              }} />
+              <span style={{ fontSize:'11px', color:'rgba(240,237,232,0.3)', letterSpacing:'0.08em' }}>
+                LIVE
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex-1 overflow-hidden flex">
+        {/* board area */}
+        <div style={{ flex:1, overflow:'hidden', display:'flex' }}>
           <KanbanBoard workspaceId={id} members={workspace?.members || []} />
         </div>
       </div>

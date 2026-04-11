@@ -2,72 +2,115 @@ import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus, X, Loader2 } from 'lucide-react';
-import KanbanCard from './KanbanCard';
-
-export default function KanbanColumn({ column, cards, onAddCard, onCardClick }) {
+ 
+const COLUMN_COLORS = {
+  todo:       '#e8a24a',
+  inprogress: '#3b82f6',
+  review:     '#8b5cf6',
+  done:       '#10b981',
+};
+ 
+export function KanbanColumn({ column, cards, onAddCard, onCardClick }) {
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [adding, setAdding] = useState(false);
-
+  const [adding, setAdding]   = useState(false);
+ 
   const { setNodeRef, isOver } = useDroppable({ id: column._id });
-
+  const accentColor = COLUMN_COLORS[column._id] || column.color || '#e8a24a';
+ 
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
     setAdding(true);
     await onAddCard(column._id, newTitle.trim());
-    setNewTitle('');
-    setShowAdd(false);
-    setAdding(false);
+    setNewTitle(''); setShowAdd(false); setAdding(false);
   };
-
+ 
   return (
-    <div className="flex flex-col w-72 flex-shrink-0">
-      {/* Column header */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: column.color }} />
-          <span className="text-sm font-semibold text-white">{column.title}</span>
-          <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">{cards.length}</span>
+    <div style={{ display:'flex', flexDirection:'column', width:'272px', flexShrink:0 }}>
+      {/* column header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'10px', padding:'0 2px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+          <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: accentColor, boxShadow:`0 0 6px ${accentColor}50` }} />
+          <span style={{ fontSize:'11px', fontWeight:500, color:'rgba(240,237,232,0.7)', letterSpacing:'0.1em' }}>
+            {column.title?.toUpperCase() || column._id?.toUpperCase()}
+          </span>
+          <span style={{
+            fontSize:'11px', color:'rgba(240,237,232,0.35)',
+            background:'rgba(255,255,255,0.06)', borderRadius:'2px',
+            padding:'1px 7px', letterSpacing:'0.04em',
+          }}>{cards.length}</span>
         </div>
-        <button onClick={() => setShowAdd(v => !v)}
-          className="text-slate-500 hover:text-white hover:bg-white/5 rounded-lg p-1 transition-all">
-          <Plus className="w-4 h-4" />
+        <button onClick={() => setShowAdd(v => !v)} style={{
+          background:'none', border:'none', cursor:'pointer', padding:'4px',
+          color:'rgba(240,237,232,0.25)', display:'flex', alignItems:'center', transition:'color 0.2s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.color='#e8a24a'}
+          onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.25)'}
+        >
+          <Plus style={{ width:15, height:15 }} />
         </button>
       </div>
-
-      {/* Cards area */}
-      <div ref={setNodeRef}
-        className={`flex-1 rounded-2xl p-3 space-y-2 min-h-[120px] transition-all duration-200 ${isOver ? 'bg-brand-500/10 border border-brand-500/30' : 'card-column'}`}>
+ 
+      {/* cards area */}
+      <div ref={setNodeRef} style={{
+        flex:1, borderRadius:'2px', padding:'8px',
+        minHeight:'120px', display:'flex', flexDirection:'column', gap:'8px',
+        transition:'all 0.2s',
+        background: isOver ? `${accentColor}08` : 'rgba(255,255,255,0.02)',
+        border: isOver ? `1px solid ${accentColor}30` : '1px solid rgba(255,255,255,0.05)',
+      }}>
         <SortableContext items={cards.map(c => c._id)} strategy={verticalListSortingStrategy}>
           {cards.map(card => (
             <KanbanCard key={card._id} card={card} onClick={() => onCardClick(card)} />
           ))}
         </SortableContext>
-
+ 
         {cards.length === 0 && !isOver && (
-          <div className="flex items-center justify-center h-16 text-slate-600 text-xs">
-            Drop cards here
+          <div style={{
+            display:'flex', alignItems:'center', justifyContent:'center',
+            height:'60px', color:'rgba(240,237,232,0.15)',
+            fontSize:'12px', letterSpacing:'0.08em',
+          }}>
+            DROP CARDS HERE
           </div>
         )}
       </div>
-
-      {/* Add card */}
+ 
+      {/* add card form */}
       {showAdd && (
-        <div className="mt-2">
-          <form onSubmit={handleAdd} className="bg-[#16132a] border border-white/10 rounded-xl p-3">
-            <input autoFocus value={newTitle} onChange={e => setNewTitle(e.target.value)}
-              className="w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none mb-2"
-              placeholder="Card title..." />
-            <div className="flex items-center gap-2">
-              <button type="submit" disabled={adding || !newTitle.trim()}
-                className="flex items-center gap-1.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-all">
-                {adding ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                Add card
+        <div style={{ marginTop:'8px' }}>
+          <form onSubmit={handleAdd} style={{
+            background:'rgba(20,18,14,0.95)',
+            border:'1px solid rgba(232,162,74,0.2)',
+            borderRadius:'2px', padding:'12px',
+          }}>
+            <input
+              autoFocus value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              placeholder="Card title..."
+              style={{
+                width:'100%', background:'transparent', border:'none',
+                outline:'none', color:'#f0ede8', fontSize:'13px',
+                fontFamily:'inherit', marginBottom:'10px',
+              }}
+            />
+            <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+              <button type="submit" disabled={adding || !newTitle.trim()} style={{
+                display:'flex', alignItems:'center', gap:'5px',
+                padding:'6px 14px', fontSize:'11px', fontWeight:600,
+                letterSpacing:'0.08em', background:'#e8a24a', border:'none',
+                borderRadius:'2px', cursor: adding || !newTitle.trim() ? 'not-allowed' : 'pointer',
+                color:'#0b0b0c', fontFamily:'inherit', opacity: !newTitle.trim() ? 0.5 : 1,
+              }}>
+                {adding ? <Loader2 style={{ width:11, height:11, animation:'spin 1s linear infinite' }} /> : null}
+                ADD
               </button>
-              <button type="button" onClick={() => { setShowAdd(false); setNewTitle(''); }}
-                className="text-slate-400 hover:text-white transition-colors p-1">
-                <X className="w-3.5 h-3.5" />
+              <button type="button" onClick={() => { setShowAdd(false); setNewTitle(''); }} style={{
+                background:'none', border:'none', cursor:'pointer', padding:'4px',
+                color:'rgba(240,237,232,0.3)', display:'flex', alignItems:'center',
+              }}>
+                <X style={{ width:14, height:14 }} />
               </button>
             </div>
           </form>
