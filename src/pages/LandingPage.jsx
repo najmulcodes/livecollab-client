@@ -1,16 +1,4 @@
-/**
- * LandingPage.jsx — marketing / home page
- *
- * FIXES applied:
- *   Issue 9:  Stats section is now in normal document flow on mobile
- *             (was position:absolute which caused overlap with CTA button).
- *             On desktop (>768px) it stays position:absolute at bottom.
- *             Hero min-height uses calc() to avoid overflow on small screens.
- *   Issue 11: Navbar correctly reflects auth state (reads useAuthStore).
- *
- * Preserved: all content, structure, animations, existing CSS classes.
- * ONLY changed: mobile responsive rules for hero stats and spacing.
- */
+
 import React from 'react';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -123,7 +111,7 @@ body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-
 /* Hero content */
 .lc-hero-content {
   position: relative; z-index: 10;
-  padding: 60px 80px 48px;
+  padding: 30px 80px 90px;
   max-width: 640px;
   /* FIX Issue 9: flex:1 so content fills space above stats */
   flex: 1;
@@ -141,11 +129,11 @@ body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-
 .lc-hero-h1 em { font-style: italic; color: var(--amber); font-weight: 400; }
 .lc-hero-desc {
   font-size: 16px; line-height: 1.75; color: var(--muted);
-  max-width: 420px; margin-bottom: 36px; font-weight: 300;
+  max-width: 420px; margin-bottom: 20px; font-weight: 300;
 }
 .lc-hero-cta {
   display: inline-flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.08em; margin-bottom: 20px;
   text-decoration: none; color: #0B0F14; background: var(--amber);
   padding: 15px 36px; border-radius: 10px; transition: all 0.25s;
   box-shadow: 0 8px 30px rgba(245,158,11,0.3);
@@ -160,8 +148,8 @@ body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-
  * This prevents the stats from overlapping the CTA button.
  * ── */
 .lc-stats-desktop {
-  position: absolute; bottom: 48px; left: 80px; z-index: 10;
-  display: flex; gap: 0;
+  position: absolute; bottom: 20px; left: 80px; z-index: 10;
+  display: flex; gap: 0 margin-top: 14px;
 }
 .lc-stats-mobile {
   display: none; /* hidden by default, shown via media query */
@@ -278,7 +266,7 @@ body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-
         </a>
 
         <ul className="lc-nav-center">
-          <li><a href="#lc-features">Platform</a></li>
+<li><a href="#lc-hero">Home</a></li>          <li><a href="#lc-features">Platform</a></li>
           <li><a href="#lc-how">How it works</a></li>
           <li><a href="#lc-cta">Pricing</a></li>
         </ul>
@@ -304,8 +292,8 @@ body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-
       </nav>
 
       {/* HERO */}
-      <section className="lc-hero">
-        <div className="lc-hero-scene" />
+<section className="lc-hero" id="lc-hero">
+          <div className="lc-hero-scene" />
         <div style={{ position:'absolute',width:'500px',height:'500px',borderRadius:'50%',background:'radial-gradient(circle, rgba(245,158,11,0.3) 0%, rgba(220,120,30,0.12) 40%, transparent 70%)',top:'45%',right:'10%',transform:'translateY(-55%)',filter:'blur(50px)',zIndex:1,pointerEvents:'none' }} className="lc-sunset-orb" />
         <div className="lc-hero-bg" />
 
