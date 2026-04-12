@@ -191,7 +191,7 @@ function JoinModal({ onClose }) {
         </p>
         <div>
           <label style={labelStyle}>INVITE CODE</label>
-          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase().slice(0, 12))}
+          <input autoFocus value={code} onChange={e => setCode(e.target.value.slice(0, 12))}
             placeholder="XXXXXXXX" maxLength={12}
             style={{ ...inputStyle, textAlign:'center', letterSpacing:'0.25em', fontSize:'18px', fontFamily:"'DM Mono', monospace" }}
             onFocus={e => e.target.style.borderColor='rgba(232,162,74,0.5)'}
