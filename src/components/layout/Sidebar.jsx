@@ -1,12 +1,17 @@
+// src/components/layout/Sidebar.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Users, Activity, Hash, Copy, Check, LogOut } from 'lucide-react';
+import { X, Users, Activity, Hash, Copy, Check, LogOut, LogIn, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '../../store/authStore';
 import useBoardStore from '../../store/boardStore';
 import { disconnectSocket } from '../../socket/socket';
+import api from '../../lib/api';
+import Logo from '../ui/Logo';
 
+// ─── Avatar ──────────────────────────────────────────────────────────────────
 function Avatar({ user, size = 'md', showOnline }) {
   const dim = size === 'sm' ? 28 : 34;
   return (
@@ -32,12 +37,53 @@ function Avatar({ user, size = 'md', showOnline }) {
   );
 }
 
+// ─── Inline danger action button ──────────────────────────────────────────────
+function DangerRow({ icon: Icon, label, color = '#ef4444', onClick, loading }) {
+  return (
+    <button onClick={onClick} disabled={loading} style={{
+      width:'100%', display:'flex', alignItems:'center', gap:'8px',
+      padding:'9px 12px', fontSize:'12px', letterSpacing:'0.05em', fontWeight:500,
+      color: loading ? `${color}80` : color,
+      background:'transparent', border:'1px solid transparent',
+      borderRadius:'2px', cursor: loading ? 'not-allowed' : 'pointer',
+      fontFamily:'inherit', transition:'all 0.2s', textAlign:'left',
+    }}
+      onMouseEnter={e => { if (!loading) { e.currentTarget.style.background=`${color}12`; e.currentTarget.style.borderColor=`${color}30`; } }}
+      onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='transparent'; }}
+    >
+      <Icon style={{ width:13, height:13, flexShrink:0 }} />
+      {label}
+    </button>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
 export default function Sidebar({ workspace, onClose }) {
   const { user, logout } = useAuthStore();
   const { onlineUsers, activities } = useBoardStore();
-  const [tab, setTab] = useState('members');
-  const [copied, setCopied] = useState(false);
+  const [tab,     setTab]     = useState('members');
+  const [copied,  setCopied]  = useState(false);
+  const [confirm, setConfirm] = useState(null); // 'leave' | 'delete' | null
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const currentMember = workspace?.members?.find(m => {
+    const mid = m.userId?._id || m.userId;
+    return mid?.toString() === user?.id?.toString();
+  });
+  const isOwnerOrAdmin = ['owner', 'admin'].includes(currentMember?.role);
+
+  const leaveMutation = useMutation({
+    mutationFn: () => api.post(`/workspaces/${workspace?._id}/leave`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries(['workspaces']); toast.success('You left the workspace'); navigate('/dashboard'); },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to leave'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/workspaces/${workspace?._id}`).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries(['workspaces']); toast.success('Workspace deleted'); navigate('/dashboard'); },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to delete'),
+  });
 
   const copyCode = () => {
     navigator.clipboard.writeText(workspace?.inviteCode || '');
@@ -58,19 +104,15 @@ export default function Sidebar({ workspace, onClose }) {
       backdropFilter:'blur(20px)',
     }}>
 
-      {/* header */}
+      {/* ── header ── */}
       <div style={{ padding:'20px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
-          <a href="/" style={{
-            fontFamily:"'Cormorant Garamond',serif",
-            fontSize:'16px', fontWeight:600, letterSpacing:'0.12em',
-            color:'#f0ede8', textDecoration:'none',
-          }}>LIVECOLLAB</a>
+          {/* ✅ Logo — same SVG as landing/login */}
+          <Logo size={16} />
           {onClose && (
             <button onClick={onClose} style={{
               background:'none', border:'none', cursor:'pointer',
-              color:'rgba(240,237,232,0.35)', padding:'4px',
-              display:'flex', alignItems:'center',
+              color:'rgba(240,237,232,0.35)', padding:'4px', display:'flex', alignItems:'center',
             }}>
               <X style={{ width:16, height:16 }} />
             </button>
@@ -115,15 +157,15 @@ export default function Sidebar({ workspace, onClose }) {
           </span>
           {copied
             ? <Check style={{ width:13, height:13, color:'#e8a24a', flexShrink:0 }} />
-            : <Copy style={{ width:13, height:13, color:'rgba(240,237,232,0.2)', flexShrink:0 }} />
+            : <Copy  style={{ width:13, height:13, color:'rgba(240,237,232,0.2)', flexShrink:0 }} />
           }
         </button>
       </div>
 
-      {/* tabs */}
+      {/* ── tabs ── */}
       <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
         {[
-          { id:'members', icon: Users,    label:'Members' },
+          { id:'members',  icon: Users,    label:'Members'  },
           { id:'activity', icon: Activity, label:'Activity' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -140,15 +182,13 @@ export default function Sidebar({ workspace, onClose }) {
         ))}
       </div>
 
-      {/* content */}
+      {/* ── tab content ── */}
       <div style={{ flex:1, overflowY:'auto', padding:'12px' }}>
         {tab === 'members' ? (
           <div>
             {onlineUsers.length > 0 && (
               <div style={{ marginBottom:'16px' }}>
-                <p style={{ fontSize:'10px', letterSpacing:'0.15em', color:'rgba(240,237,232,0.3)', margin:'0 0 8px 8px' }}>
-                  ONLINE NOW
-                </p>
+                <p style={{ fontSize:'10px', letterSpacing:'0.15em', color:'rgba(240,237,232,0.3)', margin:'0 0 8px 8px' }}>ONLINE NOW</p>
                 {onlineUsers.map(u => (
                   <div key={u._id} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px', borderRadius:'2px' }}>
                     <Avatar user={u} size="sm" showOnline />
@@ -160,29 +200,19 @@ export default function Sidebar({ workspace, onClose }) {
                 ))}
               </div>
             )}
-
-            <p style={{ fontSize:'10px', letterSpacing:'0.15em', color:'rgba(240,237,232,0.3)', margin:'0 0 8px 8px' }}>
-              ALL MEMBERS
-            </p>
+            <p style={{ fontSize:'10px', letterSpacing:'0.15em', color:'rgba(240,237,232,0.3)', margin:'0 0 8px 8px' }}>ALL MEMBERS</p>
             {workspace?.members?.map(m => {
-              const isOnline = onlineIds.includes(m._id?.toString() || m.userId?.toString());
+              const isOnline   = onlineIds.includes(m._id?.toString() || m.userId?.toString());
               const memberUser = m.userId || m;
               return (
-                <div key={m._id} style={{
-                  display:'flex', alignItems:'center', gap:'10px',
-                  padding:'8px', borderRadius:'2px', transition:'background 0.15s',
-                }}
+                <div key={m._id} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px', borderRadius:'2px', transition:'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}
                 >
                   <Avatar user={memberUser} size="sm" showOnline={isOnline} />
                   <div style={{ minWidth:0, flex:1 }}>
-                    <p style={{ fontSize:'13px', color:'#f0ede8', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {memberUser?.name}
-                    </p>
-                    <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {memberUser?.email}
-                    </p>
+                    <p style={{ fontSize:'13px', color:'#f0ede8', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{memberUser?.name}</p>
+                    <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{memberUser?.email}</p>
                   </div>
                   {(workspace?.ownerId?._id === m._id || workspace?.ownerId === m._id || m.role === 'owner') && (
                     <span style={{ fontSize:'10px', color:'rgba(232,162,74,0.7)', letterSpacing:'0.08em', flexShrink:0 }}>OWNER</span>
@@ -194,30 +224,18 @@ export default function Sidebar({ workspace, onClose }) {
         ) : (
           <div>
             {activities.length === 0 ? (
-              <p style={{ fontSize:'13px', color:'rgba(240,237,232,0.25)', textAlign:'center', padding:'32px 0', fontWeight:300 }}>
-                No activity yet
-              </p>
+              <p style={{ fontSize:'13px', color:'rgba(240,237,232,0.25)', textAlign:'center', padding:'32px 0', fontWeight:300 }}>No activity yet</p>
             ) : activities.map((a, i) => (
-              <div key={a._id || i} style={{
-                display:'flex', alignItems:'flex-start', gap:'10px',
-                padding:'10px 8px', borderRadius:'2px', transition:'background 0.15s',
-              }}
+              <div key={a._id || i} style={{ display:'flex', alignItems:'flex-start', gap:'10px', padding:'10px 8px', borderRadius:'2px', transition:'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
                 onMouseLeave={e => e.currentTarget.style.background='transparent'}
               >
-                <div style={{
-                  width:'26px', height:'26px', borderRadius:'50%', flexShrink:0,
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:'11px', fontWeight:600, color:'#0b0b0c',
-                  background: a.userId?.color || '#e8a24a',
-                  marginTop:'1px',
-                }}>
+                <div style={{ width:'26px', height:'26px', borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:600, color:'#0b0b0c', background: a.userId?.color || '#e8a24a', marginTop:'1px' }}>
                   {a.userId?.name?.[0]?.toUpperCase() || '?'}
                 </div>
                 <div style={{ minWidth:0 }}>
                   <p style={{ fontSize:'12px', color:'rgba(240,237,232,0.7)', margin:'0 0 3px', lineHeight:1.5 }}>
-                    <span style={{ color:'#f0ede8', fontWeight:500 }}>{a.userId?.name || 'Someone'}</span>
-                    {' '}{a.action}
+                    <span style={{ color:'#f0ede8', fontWeight:500 }}>{a.userId?.name || 'Someone'}</span>{' '}{a.action}
                   </p>
                   <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.25)', margin:0 }}>
                     {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
@@ -229,34 +247,68 @@ export default function Sidebar({ workspace, onClose }) {
         )}
       </div>
 
-      {/* footer */}
-      <div style={{ padding:'12px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{
-          display:'flex', alignItems:'center', gap:'10px',
-          padding:'10px 12px', borderRadius:'2px', transition:'background 0.15s',
-        }}
-          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
-          onMouseLeave={e => e.currentTarget.style.background='transparent'}
-        >
-          <Avatar user={user} size="sm" />
-          <div style={{ minWidth:0, flex:1 }}>
-            <p style={{ fontSize:'13px', fontWeight:500, color:'#f0ede8', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-              {user?.name}
-            </p>
-            <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-              {user?.email}
-            </p>
+      {/* ── footer: workspace danger actions + user row ── */}
+      <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+
+        {/* workspace actions */}
+        {workspace && (
+          <div style={{ padding:'8px 12px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+            {confirm === 'leave' ? (
+              <div style={{ padding:'10px 12px', background:'rgba(255,255,255,0.04)', borderRadius:'2px' }}>
+                <p style={{ fontSize:'12px', color:'rgba(240,237,232,0.6)', margin:'0 0 8px' }}>Leave this workspace?</p>
+                <div style={{ display:'flex', gap:'6px' }}>
+                  <button onClick={() => setConfirm(null)} style={{ flex:1, padding:'6px', fontSize:'11px', color:'rgba(240,237,232,0.5)', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit' }}>CANCEL</button>
+                  <button onClick={() => leaveMutation.mutate()} disabled={leaveMutation.isPending} style={{ flex:1, padding:'6px', fontSize:'11px', color:'#e8a24a', background:'rgba(232,162,74,0.1)', border:'1px solid rgba(232,162,74,0.2)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit' }}>
+                    {leaveMutation.isPending ? 'LEAVING...' : 'CONFIRM'}
+                  </button>
+                </div>
+              </div>
+            ) : confirm === 'delete' ? (
+              <div style={{ padding:'10px 12px', background:'rgba(239,68,68,0.06)', borderRadius:'2px' }}>
+                <p style={{ fontSize:'12px', color:'rgba(240,237,232,0.6)', margin:'0 0 8px' }}>
+                  Delete <strong style={{ color:'#f0ede8' }}>{workspace.name}</strong>? Cannot be undone.
+                </p>
+                <div style={{ display:'flex', gap:'6px' }}>
+                  <button onClick={() => setConfirm(null)} style={{ flex:1, padding:'6px', fontSize:'11px', color:'rgba(240,237,232,0.5)', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit' }}>CANCEL</button>
+                  <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} style={{ flex:1, padding:'6px', fontSize:'11px', color:'#fff', background:'#ef4444', border:'none', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit' }}>
+                    {deleteMutation.isPending ? 'DELETING...' : 'DELETE'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:'2px' }}>
+                {currentMember?.role !== 'owner' && (
+                  <DangerRow icon={LogIn} label="Leave Workspace" color="#e8a24a" onClick={() => setConfirm('leave')} />
+                )}
+                {isOwnerOrAdmin && (
+                  <DangerRow icon={Trash2} label="Delete Workspace" color="#ef4444" onClick={() => setConfirm('delete')} />
+                )}
+              </div>
+            )}
           </div>
-          <button onClick={handleLogout} style={{
-            background:'none', border:'none', cursor:'pointer', padding:'4px',
-            color:'rgba(240,237,232,0.25)', display:'flex', alignItems:'center', transition:'color 0.2s',
-          }}
-            onMouseEnter={e => e.currentTarget.style.color='#ef4444'}
-            onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.25)'}
-            title="Sign out"
+        )}
+
+        {/* user row */}
+        <div style={{ padding:'12px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'2px', transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.03)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}
           >
-            <LogOut style={{ width:14, height:14 }} />
-          </button>
+            <Avatar user={user} size="sm" />
+            <div style={{ minWidth:0, flex:1 }}>
+              <p style={{ fontSize:'13px', fontWeight:500, color:'#f0ede8', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name}</p>
+              <p style={{ fontSize:'11px', color:'rgba(240,237,232,0.3)', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</p>
+            </div>
+            <button onClick={handleLogout} title="Sign out" style={{
+              background:'none', border:'none', cursor:'pointer', padding:'4px',
+              color:'rgba(240,237,232,0.25)', display:'flex', alignItems:'center', transition:'color 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.color='#ef4444'}
+              onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.25)'}
+            >
+              <LogOut style={{ width:14, height:14 }} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,3 +1,9 @@
+// src/store/authStore.js
+/**
+ * Reads from localStorage synchronously at module init.
+ * By the time any component renders, user + token are already populated.
+ * No flash-of-unauthenticated-content. No extra localStorage reads needed in guards.
+ */
 import { create } from 'zustand';
 
 const getStoredUser = () => {
@@ -19,11 +25,11 @@ const getStoredToken = () => {
 };
 
 const useAuthStore = create((set) => ({
-  user: getStoredUser(),
+  user:  getStoredUser(),
   token: getStoredToken(),
 
   setAuth: (user, token) => {
-    localStorage.setItem('lc_user', JSON.stringify(user));
+    localStorage.setItem('lc_user',  JSON.stringify(user));
     localStorage.setItem('lc_token', token);
     set({ user, token });
   },

@@ -1,13 +1,18 @@
+// src/pages/DashboardPage.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { Plus, LogOut, Hash, Users, ArrowRight, Loader2, X, FolderOpen, MoreVertical, Trash2 } from 'lucide-react';
+import {
+  Plus, LogOut, Hash, Users, ArrowRight,
+  Loader2, X, FolderOpen, MoreVertical, Trash2, Home,
+} from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import { disconnectSocket } from '../socket/socket';
+import Logo from '../components/ui/Logo';
 
-const ICONS = ['🚀','💡','🎯','🔥','⚡','🛠️','📦','🌊','🎨','🧠','📊','🌿'];
+const ICONS  = ['🚀','💡','🎯','🔥','⚡','🛠️','📦','🌊','🎨','🧠','📊','🌿'];
 const COLORS = ['#e8a24a','#b87930','#d4882a','#c8922a','#f0c070','#a06820','#8f5c1e','#e09030'];
 
 const inputStyle = {
@@ -100,8 +105,8 @@ function DeleteConfirmModal({ workspace, onClose, onConfirm, isLoading }) {
 }
 
 function CreateModal({ onClose }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('🚀');
+  const [name,  setName]  = useState('');
+  const [icon,  setIcon]  = useState('🚀');
   const [color, setColor] = useState('#e8a24a');
   const qc = useQueryClient();
   const mutation = useMutation({
@@ -137,7 +142,8 @@ function CreateModal({ onClose }) {
           <div style={{ display:'flex', gap:'10px', flexWrap:'wrap' }}>
             {COLORS.map(c => (
               <button key={c} type="button" onClick={() => setColor(c)} style={{
-                width:'28px', height:'28px', borderRadius:'50%', background:c, border:'none', cursor:'pointer', transition:'all 0.15s',
+                width:'28px', height:'28px', borderRadius:'50%', background:c,
+                border:'none', cursor:'pointer', transition:'all 0.15s',
                 outline: color === c ? `2px solid ${c}` : '2px solid transparent', outlineOffset:'3px',
               }} />
             ))}
@@ -151,7 +157,8 @@ function CreateModal({ onClose }) {
             border:'none', borderRadius:'2px', color:'#0b0b0c',
             fontSize:'13px', fontWeight:600, letterSpacing:'0.08em',
             cursor:(mutation.isPending || !name.trim()) ? 'not-allowed' : 'pointer',
-            fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', transition:'all 0.2s',
+            fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center',
+            gap:'8px', transition:'all 0.2s',
             boxShadow: mutation.isPending ? 'none' : '0 8px 30px rgba(232,162,74,0.25)',
           }}>
           {mutation.isPending && <Loader2 style={{ width:15, height:15, animation:'spin 1s linear infinite' }} />}
@@ -179,7 +186,9 @@ function JoinModal({ onClose }) {
   return (
     <Modal title="Join Workspace" onClose={onClose}>
       <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
-        <p style={{ color:'rgba(240,237,232,0.45)', fontSize:'14px', lineHeight:1.6, fontWeight:300, margin:0 }}>Enter the invite code shared by your teammate.</p>
+        <p style={{ color:'rgba(240,237,232,0.45)', fontSize:'14px', lineHeight:1.6, fontWeight:300, margin:0 }}>
+          Enter the invite code shared by your teammate.
+        </p>
         <div>
           <label style={labelStyle}>INVITE CODE</label>
           <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase().slice(0, 12))}
@@ -195,7 +204,8 @@ function JoinModal({ onClose }) {
             border:'none', borderRadius:'2px', color:'#0b0b0c',
             fontSize:'13px', fontWeight:600, letterSpacing:'0.08em',
             cursor:(mutation.isPending || code.length < 4) ? 'not-allowed' : 'pointer',
-            fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', transition:'all 0.2s',
+            fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center',
+            gap:'8px', transition:'all 0.2s',
             boxShadow: mutation.isPending ? 'none' : '0 8px 30px rgba(232,162,74,0.25)',
           }}>
           {mutation.isPending && <Loader2 style={{ width:15, height:15, animation:'spin 1s linear infinite' }} />}
@@ -206,36 +216,49 @@ function JoinModal({ onClose }) {
   );
 }
 
+// arrow → bottom-right | 3-dot → top-right | both absolute inside relative wrapper
 function WorkspaceCard({ ws, onClick, canDelete, onDelete }) {
-  const [hovered, setHovered] = useState(false);
+  const [hovered,  setHovered]  = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div style={{ position:'relative' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <button onClick={onClick} style={{
-        width:'100%', textAlign:'left', padding:'24px',
+        width:'100%', textAlign:'left',
+        padding:'48px 20px 36px 24px',
         background: hovered ? 'rgba(232,162,74,0.05)' : 'rgba(255,255,255,0.03)',
         border: hovered ? '1px solid rgba(232,162,74,0.25)' : '1px solid rgba(255,255,255,0.07)',
         borderRadius:'2px', cursor:'pointer', transition:'all 0.2s', fontFamily:'inherit',
         boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
+        minHeight:'160px', display:'flex', flexDirection:'column', justifyContent:'flex-end',
       }}>
-        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:'16px' }}>
-          <div style={{ width:'44px', height:'44px', borderRadius:'2px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'22px', background: ws.color + '18', border:`1px solid ${ws.color}30` }}>
-            {ws.icon}
-          </div>
-          <ArrowRight style={{ width:16, height:16, color: hovered ? '#e8a24a' : 'rgba(240,237,232,0.2)', transform: hovered ? 'translateX(3px)' : 'none', transition:'all 0.2s' }} />
+        <div style={{
+          width:'36px', height:'36px', borderRadius:'2px', flexShrink:0,
+          display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px',
+          background: ws.color + '18', border:`1px solid ${ws.color}30`, marginBottom:'12px',
+        }}>
+          {ws.icon}
         </div>
-        <p style={{ fontSize:'15px', fontWeight:500, color:'#f0ede8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', margin:'0 0 6px' }}>{ws.name}</p>
+        <p style={{ fontSize:'15px', fontWeight:500, color:'#f0ede8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', margin:'0 0 6px' }}>
+          {ws.name}
+        </p>
         <div style={{ display:'flex', alignItems:'center', gap:'6px', color:'rgba(240,237,232,0.35)', fontSize:'12px' }}>
           <Users style={{ width:12, height:12 }} />
           {ws.members?.length || 1} member{ws.members?.length !== 1 ? 's' : ''}
         </div>
       </button>
 
+      {/* arrow — bottom-right */}
+      <div style={{ position:'absolute', bottom:'14px', right:'14px', pointerEvents:'none', transition:'transform 0.2s', transform: hovered ? 'translateX(3px)' : 'none' }}>
+        <ArrowRight style={{ width:15, height:15, color: hovered ? '#e8a24a' : 'rgba(240,237,232,0.2)', transition:'color 0.2s' }} />
+      </div>
+
+      {/* 3-dot — top-right */}
       {canDelete && (
-        <div style={{ position:'absolute', top:'12px', right:'12px' }}>
+        <div style={{ position:'absolute', top:'10px', right:'10px', zIndex:5 }}>
           <button
             onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
             style={{
@@ -248,11 +271,10 @@ function WorkspaceCard({ ws, onClick, canDelete, onDelete }) {
               transition:'all 0.2s',
             }}
             onMouseEnter={e => { e.currentTarget.style.color='#f0ede8'; e.currentTarget.style.background='rgba(255,255,255,0.08)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color='rgba(240,237,232,0.4)'; e.currentTarget.style.background= menuOpen ? 'rgba(255,255,255,0.1)' : 'transparent'; }}
+            onMouseLeave={e => { e.currentTarget.style.color='rgba(240,237,232,0.4)'; e.currentTarget.style.background = menuOpen ? 'rgba(255,255,255,0.1)' : 'transparent'; }}
           >
             <MoreVertical style={{ width:15, height:15 }} />
           </button>
-
           {menuOpen && (
             <>
               <div style={{ position:'fixed', inset:0, zIndex:10 }} onClick={() => setMenuOpen(false)} />
@@ -287,7 +309,7 @@ export default function DashboardPage() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [modal, setModal] = useState(null);
+  const [modal,        setModal]        = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const { data, isLoading } = useQuery({
@@ -302,7 +324,6 @@ export default function DashboardPage() {
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to delete'),
   });
 
-  // ✅ owner or admin can delete
   const canDeleteWorkspace = (ws) => {
     const member = ws.members?.find(m => {
       const mid = m.userId?._id || m.userId;
@@ -315,29 +336,68 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#0b0b0c', fontFamily:"'DM Sans',sans-serif", color:'#f0ede8', position:'relative', overflow:'hidden' }}>
+
+      {/* ambient bg blobs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }}>
         <div style={{ position:'absolute', top:'-200px', left:'-200px', width:'600px', height:'600px', background:'radial-gradient(circle, rgba(232,162,74,0.07) 0%, transparent 70%)', borderRadius:'50%' }} />
         <div style={{ position:'absolute', bottom:'-200px', right:'-100px', width:'500px', height:'500px', background:'radial-gradient(circle, rgba(184,121,48,0.05) 0%, transparent 70%)', borderRadius:'50%' }} />
       </div>
 
-      <header style={{ position:'relative', zIndex:10, borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'18px 48px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <a href="/" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'20px', fontWeight:600, letterSpacing:'0.12em', color:'#f0ede8', textDecoration:'none' }}>LIVECOLLAB</a>
-        <div style={{ display:'flex', alignItems:'center', gap:'20px' }}>
+      {/* ── header ── */}
+      <header style={{
+        position:'relative', zIndex:10,
+        borderBottom:'1px solid rgba(255,255,255,0.06)',
+        padding:'16px 40px',
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+      }}>
+        {/* ✅ Logo — identical SVG to landing/login */}
+        <Logo size={20} />
+
+        <div style={{ display:'flex', alignItems:'center', gap:'16px' }}>
+          {/* Home */}
+          <button onClick={() => navigate('/')} style={{
+            display:'flex', alignItems:'center', gap:'6px',
+            fontSize:'12px', letterSpacing:'0.06em', fontWeight:500,
+            color:'rgba(240,237,232,0.4)', background:'none', border:'none',
+            cursor:'pointer', fontFamily:'inherit', transition:'color 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color='#f0ede8'}
+            onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.4)'}
+          ><Home style={{ width:14, height:14 }} /> HOME</button>
+
+          <div style={{ width:'1px', height:'20px', background:'rgba(255,255,255,0.08)' }} />
+
+          {/* user */}
           <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-            <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(232,162,74,0.15)', border:'1px solid rgba(232,162,74,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'13px', fontWeight:600, color:'#e8a24a' }}>
+            <div style={{
+              width:'32px', height:'32px', borderRadius:'50%',
+              background:'rgba(232,162,74,0.15)', border:'1px solid rgba(232,162,74,0.3)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:'13px', fontWeight:600, color:'#e8a24a',
+            }}>
               {user?.name?.[0]?.toUpperCase()}
             </div>
             <span style={{ fontSize:'13px', color:'rgba(240,237,232,0.6)' }}>{user?.name}</span>
           </div>
+
           <div style={{ width:'1px', height:'20px', background:'rgba(255,255,255,0.08)' }} />
-          <button onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'12px', letterSpacing:'0.06em', color:'rgba(240,237,232,0.4)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', fontWeight:500, transition:'color 0.2s' }}
+
+          {/* sign out — dashboard only */}
+          <button onClick={handleLogout} style={{
+            display:'flex', alignItems:'center', gap:'6px',
+            fontSize:'12px', letterSpacing:'0.06em', fontWeight:500,
+            color:'rgba(240,237,232,0.4)', background:'none', border:'none',
+            cursor:'pointer', fontFamily:'inherit', transition:'color 0.2s',
+          }}
             onMouseEnter={e => e.currentTarget.style.color='#ef4444'}
             onMouseLeave={e => e.currentTarget.style.color='rgba(240,237,232,0.4)'}
           ><LogOut style={{ width:14, height:14 }} /> SIGN OUT</button>
         </div>
       </header>
 
-      <main style={{ position:'relative', zIndex:10, maxWidth:'1000px', margin:'0 auto', padding:'60px 48px' }}>
+      {/* ── main ── */}
+      <main style={{ position:'relative', zIndex:10, maxWidth:'1000px', margin:'0 auto', padding:'60px 40px' }}>
+
         <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:'48px', flexWrap:'wrap', gap:'20px' }}>
           <div>
             <span style={{ fontSize:'10px', letterSpacing:'0.3em', color:'#e8a24a', fontWeight:500, display:'block', marginBottom:'10px' }}>YOUR WORKSPACES</span>
@@ -346,11 +406,23 @@ export default function DashboardPage() {
             </h1>
           </div>
           <div style={{ display:'flex', gap:'10px' }}>
-            <button onClick={() => setModal('join')} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'10px 20px', fontSize:'12px', fontWeight:500, letterSpacing:'0.06em', color:'rgba(240,237,232,0.6)', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit', transition:'all 0.2s' }}
+            <button onClick={() => setModal('join')} style={{
+              display:'flex', alignItems:'center', gap:'6px', padding:'10px 20px',
+              fontSize:'12px', fontWeight:500, letterSpacing:'0.06em',
+              color:'rgba(240,237,232,0.6)', background:'rgba(255,255,255,0.04)',
+              border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px',
+              cursor:'pointer', fontFamily:'inherit', transition:'all 0.2s',
+            }}
               onMouseEnter={e => { e.currentTarget.style.color='#f0ede8'; e.currentTarget.style.borderColor='rgba(255,255,255,0.2)'; }}
               onMouseLeave={e => { e.currentTarget.style.color='rgba(240,237,232,0.6)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; }}
             ><Hash style={{ width:13, height:13 }} /> JOIN</button>
-            <button onClick={() => setModal('create')} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'10px 20px', fontSize:'12px', fontWeight:600, letterSpacing:'0.08em', color:'#0b0b0c', background:'#e8a24a', border:'none', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit', transition:'all 0.2s', boxShadow:'0 4px 20px rgba(232,162,74,0.3)' }}
+            <button onClick={() => setModal('create')} style={{
+              display:'flex', alignItems:'center', gap:'6px', padding:'10px 20px',
+              fontSize:'12px', fontWeight:600, letterSpacing:'0.08em',
+              color:'#0b0b0c', background:'#e8a24a', border:'none', borderRadius:'2px',
+              cursor:'pointer', fontFamily:'inherit', transition:'all 0.2s',
+              boxShadow:'0 4px 20px rgba(232,162,74,0.3)',
+            }}
               onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 30px rgba(232,162,74,0.45)'}
               onMouseLeave={e => e.currentTarget.style.boxShadow='0 4px 20px rgba(232,162,74,0.3)'}
             ><Plus style={{ width:13, height:13 }} /> NEW</button>
@@ -359,7 +431,7 @@ export default function DashboardPage() {
 
         {isLoading ? (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:'16px' }}>
-            {[...Array(3)].map((_,i) => <div key={i} style={{ height:'130px', borderRadius:'2px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)' }} />)}
+            {[...Array(3)].map((_,i) => <div key={i} style={{ height:'160px', borderRadius:'2px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)' }} />)}
           </div>
         ) : workspaces.length === 0 ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'80px 0', gap:'16px', textAlign:'center' }}>
@@ -367,7 +439,9 @@ export default function DashboardPage() {
               <FolderOpen style={{ width:28, height:28, color:'rgba(240,237,232,0.2)' }} />
             </div>
             <p style={{ fontSize:'16px', color:'rgba(240,237,232,0.7)', fontWeight:400, margin:0 }}>No workspaces yet</p>
-            <p style={{ fontSize:'13px', color:'rgba(240,237,232,0.35)', maxWidth:'320px', lineHeight:1.6, margin:0, fontWeight:300 }}>Create your first workspace or join one with an invite code.</p>
+            <p style={{ fontSize:'13px', color:'rgba(240,237,232,0.35)', maxWidth:'320px', lineHeight:1.6, margin:0, fontWeight:300 }}>
+              Create your first workspace or join one with an invite code.
+            </p>
             <div style={{ display:'flex', gap:'10px', marginTop:'8px' }}>
               <button onClick={() => setModal('join')} style={{ padding:'10px 20px', fontSize:'12px', letterSpacing:'0.06em', color:'rgba(240,237,232,0.6)', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit', fontWeight:500 }}>JOIN WITH CODE</button>
               <button onClick={() => setModal('create')} style={{ padding:'10px 20px', fontSize:'12px', letterSpacing:'0.08em', color:'#0b0b0c', background:'#e8a24a', border:'none', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit', fontWeight:600 }}>CREATE WORKSPACE</button>
@@ -383,7 +457,13 @@ export default function DashboardPage() {
                 onDelete={() => setDeleteTarget(ws)}
               />
             ))}
-            <button onClick={() => setModal('create')} style={{ minHeight:'130px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'8px', background:'transparent', border:'1px dashed rgba(255,255,255,0.1)', borderRadius:'2px', cursor:'pointer', fontFamily:'inherit', color:'rgba(240,237,232,0.25)', fontSize:'12px', letterSpacing:'0.08em', transition:'all 0.2s' }}
+            <button onClick={() => setModal('create')} style={{
+              minHeight:'160px', display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'center', gap:'8px',
+              background:'transparent', border:'1px dashed rgba(255,255,255,0.1)',
+              borderRadius:'2px', cursor:'pointer', fontFamily:'inherit',
+              color:'rgba(240,237,232,0.25)', fontSize:'12px', letterSpacing:'0.08em', transition:'all 0.2s',
+            }}
               onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(232,162,74,0.3)'; e.currentTarget.style.color='#e8a24a'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.color='rgba(240,237,232,0.25)'; }}
             ><Plus style={{ width:20, height:20 }} />NEW WORKSPACE</button>
