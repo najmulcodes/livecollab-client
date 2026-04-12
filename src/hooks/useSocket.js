@@ -1,14 +1,31 @@
+/**
+ * useSocket.js — workspace socket event handlers
+ *
+ * FIXES applied:
+ *   Issue 6: moveCard handler now accepts BOTH 'column' AND 'columnId'
+ *            from the server payload.
+ *            Server may broadcast { column: "..." } (DB field name) while
+ *            older emit code sends { columnId: "..." }. We handle both.
+ *
+ *   Also: All handler refs use useRef to stay stable across renders
+ *         without being listed in the effect dependency array.
+ */
 import { useEffect, useRef } from 'react';
 import { getSocket } from '../socket/socket';
 import useBoardStore from '../store/boardStore';
 
 export const useWorkspaceSocket = (workspaceId) => {
-  const { addCard, updateCard, deleteCard, moveCard, setOnlineUsers, setTypingUser, addActivity } = useBoardStore();
+  const {
+    addCard, updateCard, deleteCard, moveCard,
+    setOnlineUsers, setTypingUser, addActivity,
+  } = useBoardStore();
 
-  // Use refs so the socket handlers always have fresh store actions
-  // without needing them in the deps array (store actions are stable refs)
-  const handlers = useRef({ addCard, updateCard, deleteCard, moveCard, setOnlineUsers, setTypingUser, addActivity });
-  handlers.current = { addCard, updateCard, deleteCard, moveCard, setOnlineUsers, setTypingUser, addActivity };
+  // Stable refs so socket handlers always use fresh store actions
+  const handlers = useRef({});
+  handlers.current = {
+    addCard, updateCard, deleteCard, moveCard,
+    setOnlineUsers, setTypingUser, addActivity,
+  };
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -18,13 +35,31 @@ export const useWorkspaceSocket = (workspaceId) => {
 
     socket.emit('joinWorkspace', workspaceId);
 
-    const onNewCard      = (card)    => handlers.current.addCard(card);
-    const onUpdateCard   = (card)    => handlers.current.updateCard(card);
-    const onDeleteCard   = (cardId)  => handlers.current.deleteCard(cardId);
-    const onMoveCard     = (payload) => handlers.current.moveCard(payload);
-    const onPresence     = (users)   => handlers.current.setOnlineUsers(users);
-    const onTyping       = (payload) => handlers.current.setTypingUser(payload);
-    const onNewActivity  = (activity) => handlers.current.addActivity(activity);
+    // ─── Event handlers ────────────────────────────────────────────────────
+
+    const onNewCard    = (card)     => handlers.current.addCard(card);
+    const onUpdateCard = (card)     => handlers.current.updateCard(card);
+    const onDeleteCard = (cardId)   => handlers.current.deleteCard(cardId);
+    const onPresence   = (users)    => handlers.current.setOnlineUsers(users);
+    const onTyping     = (payload)  => handlers.current.setTypingUser(payload);
+    const onActivity   = (activity) => handlers.current.addActivity(activity);
+
+    /**
+     * onMoveCard — handles BOTH server payload shapes:
+     *   { cardId, column, order }   ← server re-broadcasts with DB field name
+     *   { cardId, columnId, order } ← legacy / client-side emit shape
+     *
+     * We pass BOTH fields to store.moveCard which resolves them safely.
+     */
+    const onMoveCard = (payload) => {
+      if (!payload || !payload.cardId) return;
+      handlers.current.moveCard({
+        cardId:   payload.cardId,
+        column:   payload.column,    // may be undefined
+        columnId: payload.columnId,  // may be undefined
+        order:    payload.order,
+      });
+    };
 
     socket.on('newCard',        onNewCard);
     socket.on('updateCard',     onUpdateCard);
@@ -32,7 +67,7 @@ export const useWorkspaceSocket = (workspaceId) => {
     socket.on('moveCard',       onMoveCard);
     socket.on('presenceUpdate', onPresence);
     socket.on('userTyping',     onTyping);
-    socket.on('newActivity',    onNewActivity);
+    socket.on('newActivity',    onActivity);
 
     return () => {
       socket.emit('leaveWorkspace', workspaceId);
@@ -42,7 +77,7 @@ export const useWorkspaceSocket = (workspaceId) => {
       socket.off('moveCard',       onMoveCard);
       socket.off('presenceUpdate', onPresence);
       socket.off('userTyping',     onTyping);
-      socket.off('newActivity',    onNewActivity);
+      socket.off('newActivity',    onActivity);
     };
-  }, [workspaceId]); // only re-run when workspaceId changes
+  }, [workspaceId]); // Only re-run when workspace changes
 };
