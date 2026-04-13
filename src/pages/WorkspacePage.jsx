@@ -7,7 +7,7 @@ import {
   Bell, Search, Plus, X,
 } from 'lucide-react';
 import api from '../lib/api';
-import useAuthStore  from '../../store/authStore';
+import useAuthStore  from '../store/authStore';
 import useBoardStore from '../store/boardStore';
 import { useWorkspaceSocket } from '../hooks/useSocket';
 import { useVideoCall }       from '../hooks/useVideoCall';

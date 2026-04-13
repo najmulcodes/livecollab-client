@@ -13,7 +13,7 @@
  *   P8 → Stats updated to SaaS credibility metrics: teams / uptime / latency
  */
 import React from 'react';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/ui/Navbar';
 
