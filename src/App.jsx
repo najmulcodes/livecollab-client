@@ -1,7 +1,7 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
-import Navbar           from './components/layout/Navbar';
+import Navbar           from './components/layout/ui/Navbar';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import LandingPage      from './pages/LandingPage';
 import LoginPage        from './pages/LoginPage';
