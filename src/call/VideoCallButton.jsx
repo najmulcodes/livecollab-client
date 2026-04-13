@@ -1,17 +1,7 @@
-/**
- * VideoCallButton.jsx — Member selector + call trigger
- *
- * Renders a "Start Call" button in the workspace top bar.
- * On click, shows a dropdown of online workspace members (excluding self).
- * Clicking a member starts the call via callHook.startCall().
- *
- * Props:
- *   members  — workspace.members array (from WorkspacePage)
- *   callHook — return value of useVideoCall()
- */
+
 import { useState, useRef, useEffect } from 'react';
 import { Video, ChevronDown } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from "../store/authStore";
 import useBoardStore from '../../store/boardStore';
 import { CallState } from '../../hooks/useVideoCall';
 
