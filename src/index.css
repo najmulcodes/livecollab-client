@@ -1,136 +1,347 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   LiveCollab Design System
+   Single source of truth for global styles
+   ───────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --bg:          #0b0b0c;
-  --amber:       #e8a24a;
-  --amber-dim:   #b87930;
-  --amber-glow:  rgba(232,162,74,0.15);
-  --white:       #f0ede8;
-  --muted:       rgba(240,237,232,0.5);
-  --subtle:      rgba(240,237,232,0.18);
-  --glass:       rgba(255,255,255,0.04);
-  --glass-border:rgba(255,255,255,0.08);
-  --brand:       #e8a24a;
+  /* Core palette */
+  --bg-base: #0b0f14;
+  --bg-surface: #111827;
+  --bg-elevated: #1a2233;
+  --bg-overlay: rgba(11, 15, 20, 0.92);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-dim: rgba(255, 255, 255, 0.09);
+  --border-amber: rgba(245, 158, 11, 0.2);
+  --border-amber-strong: rgba(245, 158, 11, 0.4);
+
+  /* Accent */
+  --amber: #f59e0b;
+  --amber-dim: rgba(245, 158, 11, 0.15);
+  --amber-glow: rgba(245, 158, 11, 0.08);
+
+  /* Text */
+  --text-primary: #e5e7eb;
+  --text-secondary: rgba(229, 231, 235, 0.55);
+  --text-tertiary: rgba(229, 231, 235, 0.3);
+
+  /* Semantic */
+  --green: #10b981;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --red: #ef4444;
+
+  /* Typography */
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-amber: 0 0 20px rgba(245, 158, 11, 0.12);
+
+  /* Motion */
+  --t-fast: 0.12s ease;
+  --t-normal: 0.2s ease;
+  --t-slow: 0.35s ease;
 }
 
-@layer base {
-  *, *::before, *::after { box-sizing: border-box; }
+/* ─────────────────────────────────────────────────────────────────────────────
+   Base reset
+   ───────────────────────────────────────────────────────────────────────────── */
 
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-  }
-
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: rgba(232,162,74,0.3); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(232,162,74,0.5); }
-
-  input, textarea, select { font-family: inherit; }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@layer utilities {
-  /* ── Glass panels ── */
-  .glass {
-    background: rgba(20, 18, 14, 0.85);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(232, 162, 74, 0.15);
-  }
-  .glass-light {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
+html,
+body,
+#root {
+  height: 100%;
+}
 
-  /* ── Typography ── */
-  .text-gradient {
-    background: linear-gradient(135deg, #f0c070 0%, #e8a24a 50%, #b87930 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .font-display {
-    font-family: 'Cormorant Garamond', serif;
-  }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
 
-  /* ── Amber glow effects ── */
-  .glow-amber {
-    box-shadow: 0 0 40px rgba(232,162,74,0.2);
-  }
-  .glow-amber-sm {
-    box-shadow: 0 4px 20px rgba(232,162,74,0.25);
-  }
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
 
-  /* ── Card styles ── */
-  .card-dark {
-    background: rgba(20, 18, 14, 0.9);
-    border: 1px solid rgba(232, 162, 74, 0.12);
-  }
-  .card-column {
-    background: rgba(11, 11, 12, 0.8);
-    border: 1px solid rgba(232, 162, 74, 0.1);
-  }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-  /* ── Status dot ── */
-  .dot-online {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #e8a24a;
-    box-shadow: 0 0 0 2px rgba(232, 162, 74, 0.3);
-  }
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
 
-  /* ── Section label ── */
-  .section-label {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: var(--amber);
-    font-weight: 500;
-    display: block;
-    margin-bottom: 16px;
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scrollbar
+   ───────────────────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Keyframes
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* ── Drag overlay ── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes vcPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(245, 158, 11, 0);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Utilities
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease both;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.3s ease both;
+}
+
+.glow-amber {
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.2);
+}
+
+.glow-amber-sm {
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.22);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fcd68a 0%, #f59e0b 50%, #c47b16 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--amber);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.dot-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--amber);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.28);
+}
+
 .drag-overlay {
   transform: rotate(2deg) scale(1.02);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   opacity: 0.92;
 }
 
-/* ── Ambient background used on auth pages ── */
+/* Panels */
+.glass {
+  background: rgba(20, 18, 14, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-dark {
+  background: rgba(20, 18, 14, 0.9);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+}
+
+.card-column {
+  background: rgba(11, 15, 20, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Page background for auth/landing surfaces
+   ───────────────────────────────────────────────────────────────────────────── */
+
 .page-bg {
   position: relative;
   min-height: 100vh;
-  background: var(--bg);
+  background: var(--bg-base);
   overflow: hidden;
 }
+
 .page-bg::before {
-  content: '';
+  content: "";
   position: fixed;
-  top: -200px; left: -200px;
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(232,162,74,0.08) 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
+
 .page-bg::after {
-  content: '';
+  content: "";
   position: fixed;
-  bottom: -200px; right: -200px;
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(184,121,48,0.06) 0%, transparent 70%);
+  bottom: -200px;
+  right: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(196, 123, 22, 0.06) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Small helpers
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.text-muted {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.border-amber-soft {
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.bg-amber-soft {
+  background: rgba(245, 158, 11, 0.08);
 }
