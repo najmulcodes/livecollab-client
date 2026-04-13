@@ -1,15 +1,4 @@
-/**
- * boardStore.js — Zustand board state
- *
- * FIXES applied:
- *   Issue 3:  moveCard now sets card.column (not card.columnId) and clears the old value
- *   Issue 6:  moveCard accepts BOTH 'column' and 'columnId' from socket payloads
- *   Issue 12: addCard initialises board safely when board is null
- *
- * CANONICAL field name for card's column: 'column' (matches MongoDB schema)
- * We NEVER use 'columnId' internally — it's only accepted as a fallback
- * when the socket sends it.
- */
+
 import { create } from 'zustand';
 
 const useBoardStore = create((set) => ({
@@ -18,17 +7,10 @@ const useBoardStore = create((set) => ({
   typingUsers: [],
   activities:  [],
 
-  /**
-   * setBoard — called once when API response arrives.
-   * Always called, even when cards array is empty.
-   * Fixes Issue 1 (empty workspace infinite loading).
-   */
+  
   setBoard: (boardData) => set({ board: boardData }),
 
-  /**
-   * addCard — add a new card (from API response or socket event).
-   * Defensive: works even if board was somehow null.
-   */
+  
   addCard: (card) => set((state) => {
     if (!state.board) {
       return { board: { cards: [card] } };
@@ -134,10 +116,7 @@ const useBoardStore = create((set) => ({
     activities: Array.isArray(activities) ? activities : [],
   }),
 
-  /**
-   * resetBoard — call when leaving a workspace to prevent stale state
-   * from leaking into the next workspace.
-   */
+  
   resetBoard: () => set({
     board:       null,
     onlineUsers: [],
