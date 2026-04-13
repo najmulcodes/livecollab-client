@@ -25,8 +25,8 @@ import { useVideoCall }       from '../hooks/useVideoCall';
 import { initSocket }         from '../socket/socket';
 import KanbanBoard     from '../components/board/KanbanBoard';
 import Sidebar         from '../components/layout/Sidebar';
-import VideoCallButton from '../components/call/VideoCallButton';
-import VideoCallModal  from '../components/call/VideoCallModal';
+import VideoCallButton from '../call/VideoCallButton';
+import VideoCallModal  from '../call/VideoCallModal';
 
 // ── Responsive hook ────────────────────────────────────────────────────────────
 function useWindowWidth() {
