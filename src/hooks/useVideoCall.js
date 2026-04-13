@@ -1,31 +1,10 @@
-/**
- * useVideoCall.js — WebRTC 1-to-1 video call hook
- *
- * Manages:
- *   - getUserMedia (camera + mic)
- *   - RTCPeerConnection lifecycle
- *   - ICE candidate exchange via Socket.IO
- *   - Offer/Answer signaling
- *   - Screen sharing
- *   - Call cleanup
- *
- * Socket events used:
- *   OUTBOUND:  call-user, answer-call, ice-candidate, end-call
- *   INBOUND:   incoming-call, call-answered, ice-candidate, end-call
- */
+
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { getSocket } from '../socket/socket';
+import getSocket from "../socket/socket";
 import useAuthStore from '../store/authStore';
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
-/**
- * CallState enum
- *   idle       → no call
- *   calling    → we initiated, waiting for answer
- *   incoming   → receiving call, not yet answered
- *   connected  → active call
- */
 export const CallState = {
   IDLE:      'idle',
   CALLING:   'calling',
