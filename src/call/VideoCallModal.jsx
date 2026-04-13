@@ -1,23 +1,11 @@
-/**
- * VideoCallModal.jsx — In-workspace video call overlay
- *
- * Renders:
- *   - Remote video (large, fills modal)
- *   - Local video (PiP, bottom-right)
- *   - Control bar: mute, camera, screen share, end call
- *   - Incoming call screen (answer / reject)
- *   - Calling screen (waiting for answer)
- *
- * Props:
- *   callHook — return value of useVideoCall()
- */
+
 import { useEffect, useRef } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
   Phone, PhoneOff, PhoneIncoming,
 } from 'lucide-react';
-import { CallState } from '../../hooks/useVideoCall';
 
+import useVideoCall, { CallState } from "../hooks/useVideoCall";
 export default function VideoCallModal({ callHook }) {
   const {
     callState, remoteUser, isMuted, isCameraOff, isScreenSharing, callError,
