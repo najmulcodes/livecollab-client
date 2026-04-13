@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Video, ChevronDown } from 'lucide-react';
 import useAuthStore from "../store/authStore";
-import useBoardStore from '../../store/boardStore';
+import useBoardStore from "../store/boardStore";
 import { CallState } from '../../hooks/useVideoCall';
 
 export default function VideoCallButton({ members = [], callHook }) {
