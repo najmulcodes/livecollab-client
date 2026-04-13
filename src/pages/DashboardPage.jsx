@@ -1,19 +1,4 @@
-/**
- * DashboardPage.jsx — fully responsive (mobile / tablet / desktop)
- *
- * Layout breakpoints (JS-driven, no CSS media queries needed):
- *   mobile  < 640px  → single column, compact header, stacked actions
- *   tablet  640–1024 → 2-column grid, slightly condensed
- *   desktop > 1024   → 3-column grid, full header
- *
- * Changes vs previous version:
- *   - useWindowWidth hook drives responsive layout
- *   - Header collapses user name + home link on mobile
- *   - Stats row wraps cleanly on all sizes
- *   - Grid uses fluid minmax so cards never overflow
- *   - Padding scales: 16px mobile → 24px tablet → 48px desktop
- *   - All existing logic, mutations, modals: UNCHANGED
- */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
