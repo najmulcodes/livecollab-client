@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import getSocket from "../socket/socket";
+import { getSocket } from "../socket/socket";
 import useAuthStore from '../store/authStore';
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
@@ -290,6 +290,12 @@ export function useVideoCall() {
       // Store payload on ref so answerCall can access it
       socket._incomingPayload = payload;
     };
+    answerCall: () => {
+  if (incomingPayloadRef.current) {
+    answerCall(incomingPayloadRef.current);
+  }
+}
+
 
     const onCallAnswered = async (payload) => {
       const pc = pcRef.current;

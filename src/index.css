@@ -345,3 +345,42 @@ button {
 .bg-amber-soft {
   background: rgba(245, 158, 11, 0.08);
 }
+
+/* Navbar responsive visibility
+   Place this file alongside Navbar.jsx:
+   src/components/ui/Navbar.css
+*/
+
+/* Desktop: show nav links, hide hamburger */
+.lc-desktop-nav {
+  display: flex;
+}
+
+.lc-hamburger {
+  display: none;
+}
+
+/* Mobile: hide nav links, show hamburger */
+@media (max-width: 768px) {
+  .lc-desktop-nav {
+    display: none !important;
+  }
+
+  .lc-hamburger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile drawer fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

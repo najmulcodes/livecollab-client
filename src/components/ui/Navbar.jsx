@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Home, Zap, Menu, X, Plus } from 'lucide-react';
@@ -20,11 +19,11 @@ function LogoMark() {
 
 const logoStyles = {
   link: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '9px',
+    display:        'flex',
+    alignItems:     'center',
+    gap:            '9px',
     textDecoration: 'none',
-    flexShrink: 0,
+    flexShrink:     0,
   },
   icon: {
     width:          '28px',
@@ -55,20 +54,20 @@ function NavItem({ to, children, icon: Icon }) {
     <NavLink
       to={to}
       style={({ isActive }) => ({
-        display:       'flex',
-        alignItems:    'center',
-        gap:           '6px',
-        padding:       '6px 12px',
-        borderRadius:  '8px',
+        display:        'flex',
+        alignItems:     'center',
+        gap:            '6px',
+        padding:        '6px 12px',
+        borderRadius:   '8px',
         textDecoration: 'none',
-        fontSize:      '13px',
-        fontWeight:    500,
-        fontFamily:    "'DM Sans', sans-serif",
-        color:         isActive ? '#F59E0B' : 'rgba(229,231,235,0.6)',
-        background:    isActive ? 'rgba(245,158,11,0.08)' : 'transparent',
-        border:        isActive ? '1px solid rgba(245,158,11,0.18)' : '1px solid transparent',
-        transition:    'all 0.15s ease',
-        whiteSpace:    'nowrap',
+        fontSize:       '13px',
+        fontWeight:     500,
+        fontFamily:     "'DM Sans', sans-serif",
+        color:          isActive ? '#F59E0B' : 'rgba(229,231,235,0.6)',
+        background:     isActive ? 'rgba(245,158,11,0.08)' : 'transparent',
+        border:         isActive ? '1px solid rgba(245,158,11,0.18)' : '1px solid transparent',
+        transition:     'all 0.15s ease',
+        whiteSpace:     'nowrap',
       })}
     >
       {Icon && <Icon style={{ width: 14, height: 14, flexShrink: 0 }} />}
@@ -99,17 +98,15 @@ export default function Navbar() {
           <LogoMark />
 
           {/* ── Right: Desktop nav ──────────────────────────────────── */}
-          <div style={styles.desktopNav}>
+          <div className="lc-desktop-nav" style={styles.desktopNav}>
             <NavItem to="/" icon={Home}>Home</NavItem>
 
             {user ? (
               <>
                 <NavItem to="/dashboard" icon={LayoutDashboard}>Dashboard</NavItem>
 
-                {/* Divider */}
                 <div style={styles.divider} />
 
-                {/* User avatar + name */}
                 <div style={styles.userChip}>
                   <div style={{
                     ...styles.avatar,
@@ -122,7 +119,6 @@ export default function Navbar() {
                   </span>
                 </div>
 
-                {/* Sign out */}
                 <button onClick={handleLogout} style={styles.signOutBtn} title="Sign out">
                   <LogOut style={{ width: 14, height: 14 }} />
                   Sign out
@@ -141,6 +137,7 @@ export default function Navbar() {
 
           {/* ── Mobile: hamburger ───────────────────────────────────── */}
           <button
+            className="lc-hamburger"
             style={styles.hamburger}
             onClick={() => setMobileOpen(v => !v)}
             aria-label="Toggle navigation"
@@ -220,15 +217,15 @@ function MobileNavItem({ to, children, icon: Icon, onClick }) {
 
 const styles = {
   nav: {
-    position:       'fixed',
-    top:            0,
-    left:           0,
-    right:          0,
-    zIndex:         100,
-    background:     'rgba(11, 15, 20, 0.88)',
-    backdropFilter: 'blur(16px)',
+    position:             'fixed',
+    top:                  0,
+    left:                 0,
+    right:                0,
+    zIndex:               100,
+    background:           'rgba(11, 15, 20, 0.88)',
+    backdropFilter:       'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderBottom:   '1px solid rgba(255,255,255,0.06)',
+    borderBottom:         '1px solid rgba(255,255,255,0.06)',
   },
   inner: {
     maxWidth:       '1200px',
@@ -244,7 +241,7 @@ const styles = {
     display:    'flex',
     alignItems: 'center',
     gap:        '4px',
-    '@media (max-width: 768px)': { display: 'none' }, // handled via JS below
+    // responsive handled by .lc-desktop-nav in Navbar.css
   },
   divider: {
     width:      '1px',
@@ -254,13 +251,13 @@ const styles = {
     flexShrink: 0,
   },
   userChip: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '8px',
-    padding:    '4px 10px 4px 4px',
+    display:      'flex',
+    alignItems:   'center',
+    gap:          '8px',
+    padding:      '4px 10px 4px 4px',
     borderRadius: '99px',
-    background: 'rgba(255,255,255,0.05)',
-    border:     '1px solid rgba(255,255,255,0.07)',
+    background:   'rgba(255,255,255,0.05)',
+    border:       '1px solid rgba(255,255,255,0.07)',
   },
   avatar: {
     width:          '24px',
@@ -312,7 +309,7 @@ const styles = {
     boxShadow:      '0 0 14px rgba(245,158,11,0.25)',
   },
   hamburger: {
-    display:      'none', // shown via media query override in globals.css
+    // base hidden state set in Navbar.css
     background:   'none',
     border:       'none',
     cursor:       'pointer',
@@ -356,18 +353,3 @@ const styles = {
     textAlign:    'left',
   },
 };
-
-/*
- * NOTE: The desktop nav and hamburger button visibility toggling
- * requires adding these rules to globals.css (already included):
- *
- * @media (max-width: 768px) {
- *   .lc-desktop-nav { display: none !important; }
- *   .lc-hamburger   { display: flex !important; }
- * }
- *
- * Since this file uses inline styles, the hamburger is always rendered
- * but hidden via CSS class. Add class="lc-hamburger" and class="lc-desktop-nav"
- * OR use the JS-based useIsDesktop pattern already established in WorkspacePage.
- * The mobile drawer logic above is JS-driven and works without CSS classes.
- */

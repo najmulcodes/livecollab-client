@@ -1,9 +1,8 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Video, ChevronDown } from 'lucide-react';
 import useAuthStore from "../store/authStore";
 import useBoardStore from "../store/boardStore";
-import useVideoCall, { CallState } from "../hooks/useVideoCall";
+import { CallState } from "../hooks/useVideoCall";
 
 export default function VideoCallButton({ members = [], callHook }) {
   const { user } = useAuthStore();
@@ -11,7 +10,7 @@ export default function VideoCallButton({ members = [], callHook }) {
   const { callState, startCall } = callHook;
 
   const [open, setOpen] = useState(false);
-  const ref             = useRef(null);
+  const ref = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {

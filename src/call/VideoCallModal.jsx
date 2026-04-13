@@ -1,11 +1,10 @@
-
 import { useEffect, useRef } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
   Phone, PhoneOff, PhoneIncoming,
 } from 'lucide-react';
 
-import useVideoCall, { CallState } from "../hooks/useVideoCall";
+import { CallState } from "../hooks/useVideoCall";
 
 export default function VideoCallModal({ callHook }) {
   const {
@@ -288,7 +287,7 @@ const styles = {
     width:     '100%',
     height:    '100%',
     objectFit: 'cover',
-    transform: 'scaleX(-1)', // mirror local
+    transform: 'scaleX(-1)',
     transition: 'opacity 0.2s',
   },
   cameraOffOverlay: {
@@ -353,7 +352,6 @@ const styles = {
     background:     'linear-gradient(160deg, #0d1117 0%, #111827 100%)',
   },
   pulseRing: {
-    // CSS pulse animation via inline style on mount
     animation: 'vcPulse 2s ease-in-out infinite',
   },
   avatarRing: {
