@@ -1,7 +1,8 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
-import Navbar from './components/ui/Navbar';
+
+// Pages
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import LandingPage      from './pages/LandingPage';
 import LoginPage        from './pages/LoginPage';
@@ -21,21 +22,14 @@ const Guest = ({ children }) => {
   return children;
 };
 
-const WithNav = ({ children }) => (
-  <>
-    <Navbar />
-    {children}
-  </>
-);
-
 export default function App() {
   return (
     <Routes>
       <Route path="/oauth-success" element={<AuthCallbackPage />} />
-      <Route path="/"              element={<WithNav><LandingPage /></WithNav>} />
+      <Route path="/"              element={<LandingPage />} />
       <Route path="/login"         element={<Guest><LoginPage /></Guest>} />
       <Route path="/register"      element={<Guest><RegisterPage /></Guest>} />
-      <Route path="/dashboard"     element={<Protected><WithNav><DashboardPage /></WithNav></Protected>} />
+      <Route path="/dashboard"     element={<Protected><DashboardPage /></Protected>} />
       <Route path="/workspace/:id" element={<Protected><WorkspacePage /></Protected>} />
       <Route path="*"              element={<Navigate to="/" replace />} />
     </Routes>
