@@ -1,7 +1,7 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
-import Navbar from './components/layout/ui/Navbar';
+import Navbar from './components/ui/Navbar';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import LandingPage      from './pages/LandingPage';
 import LoginPage        from './pages/LoginPage';
@@ -21,9 +21,6 @@ const Guest = ({ children }) => {
   return children;
 };
 
-// ✅ Pages that use the shared Navbar (landing + dashboard)
-// Login/Register have their own minimal header
-// WorkspacePage has its own top bar
 const WithNav = ({ children }) => (
   <>
     <Navbar />
