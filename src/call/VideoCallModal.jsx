@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import useVideoCall, { CallState } from "../hooks/useVideoCall";
+
 export default function VideoCallModal({ callHook }) {
   const {
     callState, remoteUser, isMuted, isCameraOff, isScreenSharing, callError,
