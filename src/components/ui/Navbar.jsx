@@ -1,15 +1,8 @@
-/**
- * Navbar.jsx — LiveCollab global navigation
- *
- * Layout:  [Logo]  ────────────  [Home] [Dashboard] [Workspace] [Sign Out / Sign In]
- * Sticky, blurred background, amber active underline.
- * Auth-aware: shows different nav items based on login state.
- * Uses NavLink for automatic active detection.
- */
+
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Home, Zap, Menu, X, Plus } from 'lucide-react';
-import useAuthStore from '../store/authStore';
+import useAuthStore from "../../store/authStore";
 
 // ─── Logo mark ────────────────────────────────────────────────────────────────
 function LogoMark() {
