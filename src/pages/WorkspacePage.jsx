@@ -1,25 +1,27 @@
 /**
- * WorkspacePage.jsx — UI-refined version
+ * WorkspacePage.jsx
  *
- * UI CHANGES (no logic changes):
- *   - Topbar: member avatar cluster, call button slot, fixed pulse keyframe
- *   - Back button gets text label on desktop
- *   - Loading/error screens use Syne font for headlines
- *   - @keyframes pulse properly replaced with 'liveGlow' (was referenced but never declared)
- *   - All data logic, queries, hooks identical to previous fix pass
+ * FIXES:
+ *   - VideoCallButton + VideoCallModal wired in (replaces disabled stub)
+ *   - MemberAvatars now correctly extracts .userId from members array
+ *   - useVideoCall hook instantiated here and passed down
+ *   - All existing layout, queries, socket logic preserved
  */
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Menu, Video } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import useBoardStore from '../store/boardStore';
 import { useWorkspaceSocket } from '../hooks/useSocket';
+import { useVideoCall } from '../hooks/useVideoCall';
 import { initSocket } from '../socket/socket';
 import KanbanBoard from '../components/board/KanbanBoard';
 import Sidebar from '../components/layout/Sidebar';
 import Logo from '../components/ui/Logo';
+import VideoCallButton from '../components/call/VideoCallButton';
+import VideoCallModal  from '../components/call/VideoCallModal';
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() =>
@@ -34,12 +36,16 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-// ─── Member avatar cluster ─────────────────────────────────────────────────────
+// ── Member avatar cluster ──────────────────────────────────────────────────────
 function MemberAvatars({ members = [], onlineUsers = [] }) {
   const onlineIds = new Set(
     onlineUsers.map(u => (u._id || u.id || u)?.toString())
   );
-  const onlineMembers = members.filter(m =>
+
+  // ✅ FIX: members is [{userId: {_id, name, color}, role}] — extract .userId
+  const resolvedMembers = members.map(m => m.userId || m).filter(Boolean);
+
+  const onlineMembers = resolvedMembers.filter(m =>
     onlineIds.has((m._id || m.id)?.toString())
   );
   const displayList = onlineMembers.slice(0, 4);
@@ -87,32 +93,7 @@ const avatarCluster = {
   },
 };
 
-// ─── Call button slot ─────────────────────────────────────────────────────────
-/**
- * Replace this with: import VideoCallButton from '../components/call/VideoCallButton'
- * and render <VideoCallButton members={members} callHook={callHook} />
- * once the WebRTC hook is wired into this page.
- */
-function CallButtonSlot() {
-  return (
-    <button style={callBtnSty} title="Video call" aria-label="Start video call" disabled>
-      <Video style={{ width: 13, height: 13 }} />
-      <span>Call</span>
-    </button>
-  );
-}
-const callBtnSty = {
-  display: 'flex', alignItems: 'center', gap: '6px',
-  padding: '6px 13px', borderRadius: '8px',
-  border: '1px solid rgba(245,158,11,0.22)',
-  background: 'rgba(245,158,11,0.07)',
-  color: 'rgba(245,158,11,0.5)',
-  fontSize: '12px', fontWeight: 600, letterSpacing: '0.04em',
-  cursor: 'not-allowed', opacity: 0.6,
-  fontFamily: "'DM Sans', sans-serif", flexShrink: 0, transition: 'all 0.15s',
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
   const { id: workspaceId } = useParams();
@@ -121,6 +102,9 @@ export default function WorkspacePage() {
   const { setBoard, setActivities, resetBoard, onlineUsers } = useBoardStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDesktop = useIsDesktop();
+
+  // ✅ Instantiate video call hook at page level
+  const callHook = useVideoCall();
 
   useEffect(() => { resetBoard(); }, [workspaceId]);
   useEffect(() => { if (token) initSocket(token); }, [token]);
@@ -161,6 +145,9 @@ export default function WorkspacePage() {
     }
   }, [activitiesData]);
 
+  // ✅ Extract flat member objects for VideoCallButton (needs {_id, name, color})
+  const flatMembers = (workspace?.members ?? []).map(m => m.userId || m).filter(Boolean);
+
   if (wsLoading || boardLoading) {
     return (
       <div style={S.loadingRoot}>
@@ -196,8 +183,10 @@ export default function WorkspacePage() {
                               50%     { box-shadow: 0 0 0 14px rgba(245,158,11,0);    } }
         @keyframes fadeIn   { from { opacity:0; transform:translateY(8px); }
                               to   { opacity:1; transform:translateY(0); } }
+        @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
       `}</style>
 
+      {/* Mobile sidebar overlay */}
       {!isDesktop && sidebarOpen && (
         <div style={S.mobileOverlay}>
           <div style={S.mobileBackdrop} onClick={() => setSidebarOpen(false)} />
@@ -210,9 +199,8 @@ export default function WorkspacePage() {
       {isDesktop && <div style={S.desktopSidebar}><Sidebar workspace={workspace} /></div>}
 
       <div style={S.main}>
-        {/* ── Top bar ─────────────────────────────────────────────── */}
+        {/* ── Top bar ─────────────────────────────────────────────────── */}
         <div style={S.topBar}>
-
           {!isDesktop && (
             <>
               <button onClick={() => setSidebarOpen(true)} style={S.iconBtn} aria-label="Open sidebar">
@@ -223,7 +211,6 @@ export default function WorkspacePage() {
             </>
           )}
 
-          {/* Back */}
           <button onClick={() => navigate('/dashboard')} style={S.backNavBtn} aria-label="Dashboard">
             <ArrowLeft style={{ width: 14, height: 14 }} />
             {isDesktop && <span style={S.backNavLabel}>Dashboard</span>}
@@ -231,7 +218,6 @@ export default function WorkspacePage() {
 
           <div style={S.divider} />
 
-          {/* Workspace title */}
           <div style={S.titleBlock}>
             {workspace?.icon && <span style={S.wsIcon}>{workspace.icon}</span>}
             <div style={{ minWidth: 0 }}>
@@ -240,11 +226,14 @@ export default function WorkspacePage() {
             </div>
           </div>
 
-          {/* Right: online members + call + live */}
+          {/* Right cluster: online members + call button + live */}
           <div style={S.rightCluster}>
             <MemberAvatars members={workspace?.members ?? []} onlineUsers={onlineUsers} />
             {onlineUsers.length > 0 && <div style={S.divider} />}
-            <CallButtonSlot />
+
+            {/* ✅ FIX: Real VideoCallButton wired up */}
+            <VideoCallButton members={flatMembers} callHook={callHook} />
+
             <div style={S.divider} />
             <div style={S.livePill}>
               <span style={S.liveDot} />
@@ -258,11 +247,14 @@ export default function WorkspacePage() {
           <KanbanBoard workspaceId={workspaceId} members={workspace?.members ?? []} />
         </div>
       </div>
+
+      {/* ✅ FIX: VideoCallModal rendered at page level */}
+      <VideoCallModal callHook={callHook} />
     </div>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ── Styles ─────────────────────────────────────────────────────────────────────
 
 const S = {
   root: {
@@ -369,7 +361,7 @@ const S = {
   liveDot: {
     display: 'block', width: '7px', height: '7px',
     borderRadius: '50%', background: '#F59E0B',
-    animation: 'liveGlow 2s ease-in-out infinite',  // FIX: was 'pulse' (never declared)
+    animation: 'liveGlow 2s ease-in-out infinite',
     flexShrink: 0,
   },
   liveText: {
