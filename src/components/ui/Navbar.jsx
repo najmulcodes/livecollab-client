@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Home, Zap, Menu, X, Plus } from 'lucide-react';
-import useAuthStore from "../../store/authStore";
+import useAuthStore from ../../../store/authStore';
 
 // ─── Logo mark ────────────────────────────────────────────────────────────────
 function LogoMark() {
