@@ -1,15 +1,4 @@
-/**
- * WorkspacePage.jsx
- *
- * Layout matches reference image:
- *   - LEFT: narrow floating icon sidebar (64px) with workspace avatar + nav icons
- *   - RIGHT: top bar (workspace name, member avatars, call button, search)
- *            + kanban board
- *
- * Colors: black (#0B0F14) + amber (#F59E0B) — existing palette preserved
- * VideoCallButton + VideoCallModal wired in
- * MemberAvatars correctly extracts .userId from members array
- */
+
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,8 +14,8 @@ import { useVideoCall }       from '../hooks/useVideoCall';
 import { initSocket }         from '../socket/socket';
 import KanbanBoard     from '../components/board/KanbanBoard';
 import Sidebar         from '../components/layout/Sidebar';
-import VideoCallButton from '../call/VideoCallButton';
-import VideoCallModal  from '../call/VideoCallModal';
+import VideoCallButton from "../call/VideoCallButton";
+import VideoCallModal from "../call/VideoCallModal";
 
 // ── Responsive hook ────────────────────────────────────────────────────────────
 function useWindowWidth() {
