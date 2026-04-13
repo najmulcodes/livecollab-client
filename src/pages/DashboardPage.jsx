@@ -9,7 +9,7 @@ import {
   Zap, Home,
 } from 'lucide-react';
 import api           from '../lib/api';
-import useAuthStore  from '../store/authStore';
+import useAuthStore  from '../../store/authStore';
 import { disconnectSocket } from '../socket/socket';
 import Logo          from '../components/ui/Logo';
 

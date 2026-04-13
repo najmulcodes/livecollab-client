@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import api from '../lib/api';
-import useAuthStore from '../store/authStore';
+import useAuthStore from '../../store/authStore';
 import { initSocket } from '../socket/socket';
 
 export default function RegisterPage() {
