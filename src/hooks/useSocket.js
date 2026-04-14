@@ -1,15 +1,4 @@
-/**
- * useSocket.js — workspace socket event handlers
- *
- * FIXES applied:
- *   Issue 6: moveCard handler now accepts BOTH 'column' AND 'columnId'
- *            from the server payload.
- *            Server may broadcast { column: "..." } (DB field name) while
- *            older emit code sends { columnId: "..." }. We handle both.
- *
- *   Also: All handler refs use useRef to stay stable across renders
- *         without being listed in the effect dependency array.
- */
+
 import { useEffect, useRef } from 'react';
 import { getSocket } from '../socket/socket';
 import useBoardStore from '../store/boardStore';

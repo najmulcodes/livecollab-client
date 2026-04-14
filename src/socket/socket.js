@@ -1,14 +1,4 @@
-/**
- * socket.js — Socket.IO client singleton
- *
- * CHANGE vs original:
- *   Pass userId in socket auth so the server can socket.join(userId),
- *   which is required for direct-to-user signaling in video calls.
- *
- *   If your server already uses socket.id for routing, you can skip this
- *   and use socket.id as the call target instead. But userId is more stable
- *   (socket.id changes on reconnect).
- */
+
 import { io } from 'socket.io-client';
 import useAuthStore from '../store/authStore';
 

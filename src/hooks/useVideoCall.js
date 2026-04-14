@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { getSocket } from "../socket/socket";
 import useAuthStore from '../store/authStore';
@@ -16,59 +15,50 @@ export function useVideoCall() {
   const { user } = useAuthStore();
 
   // ─── State ─────────────────────────────────────────────────────────────────
-  const [callState,      setCallState]      = useState(CallState.IDLE);
-  const [remoteUser,     setRemoteUser]     = useState(null);   // { id, name }
-  const [isMuted,        setIsMuted]        = useState(false);
-  const [isCameraOff,    setIsCameraOff]    = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [callError,      setCallError]      = useState(null);
+  const [callState,        setCallState]        = useState(CallState.IDLE);
+  const [remoteUser,       setRemoteUser]       = useState(null);   // { id, name }
+  const [isMuted,          setIsMuted]          = useState(false);
+  const [isCameraOff,      setIsCameraOff]      = useState(false);
+  const [isScreenSharing,  setIsScreenSharing]  = useState(false);
+  const [callError,        setCallError]        = useState(null);
 
-  // ─── Refs (not state — mutations must not trigger re-renders) ──────────────
-  const pcRef            = useRef(null);   // RTCPeerConnection
-  const localStreamRef   = useRef(null);   // camera + mic stream
-  const screenStreamRef  = useRef(null);   // screen capture stream
-  const localVideoRef    = useRef(null);   // <video> DOM ref (local)
-  const remoteVideoRef   = useRef(null);   // <video> DOM ref (remote)
-  const pendingCandidates = useRef([]);    // ICE candidates queued before remote desc is set
-  const remoteDescSet    = useRef(false);  // guard for queueing ICE candidates
+  // ─── Refs ──────────────────────────────────────────────────────────────────
+  const pcRef              = useRef(null);   // RTCPeerConnection
+  const localStreamRef     = useRef(null);   // camera + mic stream
+  const screenStreamRef    = useRef(null);   // screen capture stream
+  const localVideoRef      = useRef(null);   // <video> DOM ref (local)
+  const remoteVideoRef     = useRef(null);   // <video> DOM ref (remote)
+  const pendingCandidates  = useRef([]);     // ICE candidates queued before remote desc is set
+  const remoteDescSet      = useRef(false);  // guard for queueing ICE candidates
+  // FIX: store incoming call payload in a ref — NOT on the socket object
+  const incomingPayloadRef = useRef(null);
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
-  /** Attach a stream to a video element ref safely */
   const attachStream = (videoRef, stream) => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
   };
 
-  /** Get camera+mic stream and cache it */
   const getLocalStream = useCallback(async () => {
     if (localStreamRef.current) return localStreamRef.current;
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     localStreamRef.current = stream;
     attachStream(localVideoRef, stream);
     return stream;
   }, []);
 
-  /** Build a fresh RTCPeerConnection with ICE handlers */
   const createPeerConnection = useCallback((targetUserId) => {
     const socket = getSocket();
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    // Send ICE candidates to the other peer via socket
     pc.onicecandidate = ({ candidate }) => {
       if (candidate && socket) {
-        socket.emit('ice-candidate', {
-          to:        targetUserId,
-          candidate,
-        });
+        socket.emit('ice-candidate', { to: targetUserId, candidate });
       }
     };
 
-    // When we receive remote tracks, attach to remote video element
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
       attachStream(remoteVideoRef, remoteStream);
@@ -84,32 +74,27 @@ export function useVideoCall() {
     return pc;
   }, []);
 
-  /** Full cleanup — call on end or error */
   const cleanup = useCallback(() => {
-    // Stop local camera/mic
     localStreamRef.current?.getTracks().forEach(t => t.stop());
     localStreamRef.current = null;
 
-    // Stop screen share if active
     screenStreamRef.current?.getTracks().forEach(t => t.stop());
     screenStreamRef.current = null;
 
-    // Close peer connection
     if (pcRef.current) {
-      pcRef.current.onicecandidate  = null;
-      pcRef.current.ontrack         = null;
+      pcRef.current.onicecandidate         = null;
+      pcRef.current.ontrack                = null;
       pcRef.current.onconnectionstatechange = null;
       pcRef.current.close();
       pcRef.current = null;
     }
 
-    // Clear video elements
     if (localVideoRef.current)  localVideoRef.current.srcObject  = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
-    // Reset state
-    pendingCandidates.current = [];
-    remoteDescSet.current     = false;
+    pendingCandidates.current    = [];
+    remoteDescSet.current        = false;
+    incomingPayloadRef.current   = null; // clear stored payload on cleanup
 
     setCallState(CallState.IDLE);
     setRemoteUser(null);
@@ -119,7 +104,6 @@ export function useVideoCall() {
     setCallError(null);
   }, []);
 
-  /** Drain queued ICE candidates once remote description is set */
   const drainCandidates = useCallback(async () => {
     if (!pcRef.current) return;
     for (const candidate of pendingCandidates.current) {
@@ -132,10 +116,6 @@ export function useVideoCall() {
 
   // ─── Outbound call ─────────────────────────────────────────────────────────
 
-  /**
-   * startCall — initiate a call to another workspace member
-   * @param {{ id: string, name: string }} targetUser
-   */
   const startCall = useCallback(async (targetUser) => {
     if (callState !== CallState.IDLE) return;
     const socket = getSocket();
@@ -149,17 +129,16 @@ export function useVideoCall() {
       const stream = await getLocalStream();
       const pc     = createPeerConnection(targetUser.id);
 
-      // Add local tracks to the connection
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-      // Create and set local offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
+      console.log(`[startCall] emitting call-user → to=${targetUser.id}`);
       socket.emit('call-user', {
-        to:     targetUser.id,
-        from:   { id: user.id, name: user.name },
-        offer:  pc.localDescription,
+        to:   targetUser.id,
+        from: { id: user.id, name: user.name },
+        offer: pc.localDescription,
       });
     } catch (err) {
       setCallError(err.message || 'Failed to start call');
@@ -182,15 +161,14 @@ export function useVideoCall() {
 
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-      // Set the remote offer
       await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
       remoteDescSet.current = true;
       await drainCandidates();
 
-      // Create and send answer
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
+      console.log(`[answerCall] emitting answer-call → to=${payload.from.id}`);
       socket.emit('answer-call', {
         to:     payload.from.id,
         answer: pc.localDescription,
@@ -240,7 +218,6 @@ export function useVideoCall() {
     if (!pc) return;
 
     if (isScreenSharing) {
-      // Revert to camera
       screenStreamRef.current?.getTracks().forEach(t => t.stop());
       screenStreamRef.current = null;
 
@@ -260,13 +237,11 @@ export function useVideoCall() {
         const sender = pc.getSenders().find(s => s.track?.kind === 'video');
         if (sender) {
           sender.replaceTrack(screenTrack);
-          // Show screen share in local preview
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = screenStream;
           }
         }
 
-        // Auto-revert when user stops via browser UI
         screenTrack.onended = () => toggleScreenShare();
         setIsScreenSharing(true);
       } catch { /* User cancelled screen pick — safe to ignore */ }
@@ -280,24 +255,20 @@ export function useVideoCall() {
     if (!socket) return;
 
     const onIncomingCall = (payload) => {
+      console.log('[incoming-call] received from', payload?.from);
       if (callState !== CallState.IDLE) {
-        // Already in a call — reject automatically
+        // Already in a call — auto-reject
         socket.emit('end-call', { to: payload.from.id });
         return;
       }
+      // FIX: store payload in ref, NOT on the socket object
+      incomingPayloadRef.current = payload;
       setCallState(CallState.INCOMING);
       setRemoteUser(payload.from);
-      // Store payload on ref so answerCall can access it
-      socket._incomingPayload = payload;
     };
-    answerCall: () => {
-  if (incomingPayloadRef.current) {
-    answerCall(incomingPayloadRef.current);
-  }
-}
-
 
     const onCallAnswered = async (payload) => {
+      console.log('[call-answered] received', !!payload?.answer);
       const pc = pcRef.current;
       if (!pc) return;
       try {
@@ -320,18 +291,21 @@ export function useVideoCall() {
       } catch { /* stale */ }
     };
 
-    const onEndCall = () => cleanup();
+    const onEndCall = () => {
+      console.log('[end-call] received — cleaning up');
+      cleanup();
+    };
 
-    socket.on('incoming-call',  onIncomingCall);
-    socket.on('call-answered',  onCallAnswered);
-    socket.on('ice-candidate',  onIceCandidate);
-    socket.on('end-call',       onEndCall);
+    socket.on('incoming-call', onIncomingCall);
+    socket.on('call-answered', onCallAnswered);
+    socket.on('ice-candidate', onIceCandidate);
+    socket.on('end-call',      onEndCall);
 
     return () => {
-      socket.off('incoming-call',  onIncomingCall);
-      socket.off('call-answered',  onCallAnswered);
-      socket.off('ice-candidate',  onIceCandidate);
-      socket.off('end-call',       onEndCall);
+      socket.off('incoming-call', onIncomingCall);
+      socket.off('call-answered', onCallAnswered);
+      socket.off('ice-candidate', onIceCandidate);
+      socket.off('end-call',      onEndCall);
     };
   }, [callState, cleanup, drainCandidates]);
 
@@ -341,7 +315,6 @@ export function useVideoCall() {
   // ─── Public API ────────────────────────────────────────────────────────────
 
   return {
-    // State
     callState,
     remoteUser,
     isMuted,
@@ -349,15 +322,15 @@ export function useVideoCall() {
     isScreenSharing,
     callError,
 
-    // Video refs (attach to <video> elements)
     localVideoRef,
     remoteVideoRef,
 
-    // Actions
     startCall,
+    // FIX: reads from incomingPayloadRef (stable ref) instead of socket._incomingPayload
     answerCall: () => {
-      const socket = getSocket();
-      if (socket?._incomingPayload) answerCall(socket._incomingPayload);
+      if (incomingPayloadRef.current) {
+        answerCall(incomingPayloadRef.current);
+      }
     },
     rejectCall,
     endCall,
