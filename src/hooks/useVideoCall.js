@@ -23,14 +23,13 @@ export function useVideoCall() {
   const [callError,        setCallError]        = useState(null);
 
   // ─── Refs ──────────────────────────────────────────────────────────────────
-  const pcRef              = useRef(null);   // RTCPeerConnection
-  const localStreamRef     = useRef(null);   // camera + mic stream
-  const screenStreamRef    = useRef(null);   // screen capture stream
-  const localVideoRef      = useRef(null);   // <video> DOM ref (local)
-  const remoteVideoRef     = useRef(null);   // <video> DOM ref (remote)
-  const pendingCandidates  = useRef([]);     // ICE candidates queued before remote desc is set
-  const remoteDescSet      = useRef(false);  // guard for queueing ICE candidates
-  // FIX: store incoming call payload in a ref — NOT on the socket object
+  const pcRef              = useRef(null);
+  const localStreamRef     = useRef(null);
+  const screenStreamRef    = useRef(null);
+  const localVideoRef      = useRef(null);
+  const remoteVideoRef     = useRef(null);
+  const pendingCandidates  = useRef([]);
+  const remoteDescSet      = useRef(false);
   const incomingPayloadRef = useRef(null);
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -55,6 +54,7 @@ export function useVideoCall() {
 
     pc.onicecandidate = ({ candidate }) => {
       if (candidate && socket) {
+        // FIX: field name is `to` (matches server handler)
         socket.emit('ice-candidate', { to: targetUserId, candidate });
       }
     };
@@ -82,8 +82,8 @@ export function useVideoCall() {
     screenStreamRef.current = null;
 
     if (pcRef.current) {
-      pcRef.current.onicecandidate         = null;
-      pcRef.current.ontrack                = null;
+      pcRef.current.onicecandidate          = null;
+      pcRef.current.ontrack                 = null;
       pcRef.current.onconnectionstatechange = null;
       pcRef.current.close();
       pcRef.current = null;
@@ -92,9 +92,9 @@ export function useVideoCall() {
     if (localVideoRef.current)  localVideoRef.current.srcObject  = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
-    pendingCandidates.current    = [];
-    remoteDescSet.current        = false;
-    incomingPayloadRef.current   = null; // clear stored payload on cleanup
+    pendingCandidates.current  = [];
+    remoteDescSet.current      = false;
+    incomingPayloadRef.current = null;
 
     setCallState(CallState.IDLE);
     setRemoteUser(null);
@@ -121,23 +121,35 @@ export function useVideoCall() {
     const socket = getSocket();
     if (!socket) { setCallError('Socket not connected'); return; }
 
+    // IMPORTANT: targetUser._id must be the MongoDB ObjectId string.
+    // This must match exactly what the server uses as the room key.
+    // Never use targetUser.email or targetUser.name here.
+    const targetId = targetUser._id?.toString() ?? targetUser.id?.toString();
+    if (!targetId) {
+      setCallError('Target user has no valid _id');
+      return;
+    }
+
     try {
       setCallState(CallState.CALLING);
-      setRemoteUser(targetUser);
+      setRemoteUser({ id: targetId, name: targetUser.name });
       setCallError(null);
 
       const stream = await getLocalStream();
-      const pc     = createPeerConnection(targetUser.id);
+      const pc     = createPeerConnection(targetId);
 
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      console.log(`[startCall] emitting call-user → to=${targetUser.id}`);
+      // FIX: emit field is `to` (server reads `to`, not `toUserId`)
+      // Also send `from` so the server can relay it — prevents the server
+      // from needing to reconstruct it from socket.user, keeping relay pure.
+      console.log(`[startCall] emitting call-user → to=${targetId}`);
       socket.emit('call-user', {
-        to:   targetUser.id,
-        from: { id: user.id, name: user.name },
+        to:   targetId,
+        from: { id: user._id?.toString() ?? user.id, name: user.name },
         offer: pc.localDescription,
       });
     } catch (err) {
@@ -168,6 +180,7 @@ export function useVideoCall() {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
+      // FIX: emit field is `to` (server reads `to`)
       console.log(`[answerCall] emitting answer-call → to=${payload.from.id}`);
       socket.emit('answer-call', {
         to:     payload.from.id,
@@ -182,6 +195,7 @@ export function useVideoCall() {
   const rejectCall = useCallback(() => {
     const socket = getSocket();
     if (socket && remoteUser) {
+      // FIX: field is `to`
       socket.emit('end-call', { to: remoteUser.id });
     }
     cleanup();
@@ -192,6 +206,7 @@ export function useVideoCall() {
   const endCall = useCallback(() => {
     const socket = getSocket();
     if (socket && remoteUser) {
+      // FIX: field is `to`
       socket.emit('end-call', { to: remoteUser.id });
     }
     cleanup();
@@ -244,7 +259,7 @@ export function useVideoCall() {
 
         screenTrack.onended = () => toggleScreenShare();
         setIsScreenSharing(true);
-      } catch { /* User cancelled screen pick — safe to ignore */ }
+      } catch { /* user cancelled screen pick */ }
     }
   }, [isScreenSharing]);
 
@@ -255,13 +270,11 @@ export function useVideoCall() {
     if (!socket) return;
 
     const onIncomingCall = (payload) => {
-      console.log('[incoming-call] received from', payload?.from);
+      console.log('[incoming-call] ✅ RECEIVED from', payload?.from);
       if (callState !== CallState.IDLE) {
-        // Already in a call — auto-reject
         socket.emit('end-call', { to: payload.from.id });
         return;
       }
-      // FIX: store payload in ref, NOT on the socket object
       incomingPayloadRef.current = payload;
       setCallState(CallState.INCOMING);
       setRemoteUser(payload.from);
@@ -276,7 +289,7 @@ export function useVideoCall() {
         remoteDescSet.current = true;
         await drainCandidates();
         setCallState(CallState.CONNECTED);
-      } catch { /* ignore stale answer */ }
+      } catch { /* stale */ }
     };
 
     const onIceCandidate = async ({ candidate }) => {
@@ -326,7 +339,6 @@ export function useVideoCall() {
     remoteVideoRef,
 
     startCall,
-    // FIX: reads from incomingPayloadRef (stable ref) instead of socket._incomingPayload
     answerCall: () => {
       if (incomingPayloadRef.current) {
         answerCall(incomingPayloadRef.current);
