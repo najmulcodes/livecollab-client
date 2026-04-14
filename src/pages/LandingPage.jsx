@@ -1,17 +1,3 @@
-/**
- * LandingPage.jsx
- *
- * FIXES APPLIED (layout, spacing, structure only — no state/color changes):
- *
- *   P1 → Hero is now a two-column CSS Grid (left: content, right: kanban preview)
- *   P2 → Content padding-top reduced from ~80px to 0 (grid centers it vertically)
- *   P3 → Stats moved INSIDE the left column, below CTA — always visible on first screen
- *   P4 → Built a CSS-only kanban board preview in the right column
- *   P5 → h1 font-weight raised from 300 → 600 for stronger visual presence
- *   P6 → Hero is exactly height:100vh — CTA guaranteed above fold on any screen
- *   P7 → Explicit mobile breakpoint: single column, kanban hidden at ≤900px
- *   P8 → Stats updated to SaaS credibility metrics: teams / uptime / latency
- */
 import React from 'react';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -276,15 +262,11 @@ export default function LandingPage() {
         html { scroll-behavior: smooth; }
 
         /* ── HERO ─────────────────────────────────────────────────────── */
-        /*
-         * FIX P6: height:100vh guarantees the full first screen.
-         * FIX P2: padding-top:60px ONLY compensates for fixed navbar.
-         *         No extra top margin wasted.
-         */
+        
         .lc-hero {
           position:   relative;
           height:     100vh;
-          padding-top: 60px;          /* exactly the navbar height */
+          padding-top: 60px;          
           overflow:   hidden;
           display:    flex;
           align-items: center;
@@ -301,7 +283,6 @@ export default function LandingPage() {
           z-index:   0;
         }
 
-        /* Amber glow orb — right side, behind kanban preview */
         .lc-hero-orb {
           position:      absolute;
           width:         480px;
@@ -316,11 +297,7 @@ export default function LandingPage() {
           pointer-events: none;
         }
 
-        /*
-         * FIX P1: Two-column grid layout.
-         * Left: content (slightly wider). Right: kanban preview.
-         * FIX P2: padding is just for horizontal breathing room, not vertical push.
-         */
+        
         .lc-hero-grid {
           position:            relative;
           z-index:             2;
@@ -332,7 +309,7 @@ export default function LandingPage() {
           max-width:           1280px;
           margin:              0 auto;
           padding:             0 clamp(20px, 5vw, 72px);
-          /* Slight upward shift so visual center is above mathematical center */
+          transform:           translateY(-10%);
         }
 
         /* ── LEFT COLUMN ──────────────────────────────────────────────── */
