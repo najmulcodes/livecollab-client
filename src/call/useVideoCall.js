@@ -6,6 +6,14 @@
  *   - Incoming payload stored in useRef (not on socket object)
  *   - callStateRef prevents stale closure in socket callbacks
  *   - toggleScreenShare dep array fixed
+ *
+ * BUG FIX (root cause — socket routing failure):
+ *   - targetUser coming from Redux store / presence list is a PLAIN object.
+ *     Plain objects have no Mongoose virtual `.id` getter — only `._id`.
+ *     So targetUser.id === undefined → socket.emit('call-user', { toUserId: undefined })
+ *     → io.to(undefined) on server → no room match → receiver never gets incoming-call.
+ *   - Fix: normalize to string via (targetUser._id || targetUser.id).toString()
+ *     and store the normalized id on remoteUser so endCall also works correctly.
  */
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { getSocket } from '../socket/socket';
@@ -60,7 +68,6 @@ export function useVideoCall() {
 
     pc.onicecandidate = ({ candidate }) => {
       if (candidate && socket) {
-        // ✅ Use toUserId to match backend
         socket.emit('ice-candidate', { toUserId: targetUserId, candidate });
       }
     };
@@ -119,21 +126,35 @@ export function useVideoCall() {
     const socket = getSocket();
     if (!socket?.connected) { setCallError('Not connected'); return; }
 
+    // FIX: targetUser is a plain object from the store — it has ._id not .id
+    // (._id may be an ObjectId or already a string depending on serialization)
+    // Always resolve to a plain string before using as a socket room address.
+    const targetId = (targetUser._id || targetUser.id)?.toString();
+    if (!targetId) {
+      console.error('[VideoCall] startCall — could not resolve targetUser id', targetUser);
+      setCallError('Invalid user');
+      return;
+    }
+
+    console.log('[VideoCall] startCall → targetId:', targetId);
+
     try {
       setCallState(CallState.CALLING);
-      setRemoteUser(targetUser);
+      // Store normalized remoteUser so endCall() can reliably read .id
+      setRemoteUser({ ...targetUser, id: targetId });
       setCallError(null);
 
       const stream = await getLocalStream();
-      const pc     = createPC(targetUser.id);
+      // FIX: pass targetId (string) not targetUser.id (was undefined)
+      const pc     = createPC(targetId);
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // ✅ Use toUserId to match backend call-user handler
+      // FIX: toUserId is now targetId (string), not undefined
       socket.emit('call-user', {
-        toUserId: targetUser.id,
+        toUserId: targetId,
         offer:    pc.localDescription,
       });
     } catch (err) {
@@ -149,12 +170,16 @@ export function useVideoCall() {
     const socket = getSocket();
     if (!socket) return;
 
+    // payload.from.id is constructed by the server from userId (_id.toString()) — safe
+    const callerId = payload.from.id;
+    console.log('[VideoCall] answerCall → callerId:', callerId);
+
     try {
       setCallState(CallState.CONNECTED);
       setCallError(null);
 
       const stream = await getLocalStream();
-      const pc     = createPC(payload.from.id);
+      const pc     = createPC(callerId);
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
@@ -164,9 +189,8 @@ export function useVideoCall() {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      // ✅ Use toUserId to match backend answer-call handler
       socket.emit('answer-call', {
-        toUserId: payload.from.id,
+        toUserId: callerId,
         answer:   pc.localDescription,
       });
     } catch (err) {
@@ -179,15 +203,22 @@ export function useVideoCall() {
   const rejectCall = useCallback(() => {
     const socket  = getSocket();
     const payload = incomingRef.current;
-    // ✅ Use toUserId
-    if (socket && payload) socket.emit('end-call', { toUserId: payload.from.id });
+    // payload.from.id is server-set string — safe
+    if (socket && payload?.from?.id) {
+      console.log('[VideoCall] rejectCall → toUserId:', payload.from.id);
+      socket.emit('end-call', { toUserId: payload.from.id });
+    }
     cleanup();
   }, [cleanup]);
 
   const endCall = useCallback(() => {
     const socket = getSocket();
-    // ✅ Use toUserId
-    if (socket && remoteUser) socket.emit('end-call', { toUserId: remoteUser.id });
+    // remoteUser.id was normalized to string in startCall (or set from server payload in answerCall)
+    const targetId = remoteUser?.id;
+    if (socket && targetId) {
+      console.log('[VideoCall] endCall → toUserId:', targetId);
+      socket.emit('end-call', { toUserId: targetId });
+    }
     cleanup();
   }, [remoteUser, cleanup]);
 
@@ -258,7 +289,7 @@ export function useVideoCall() {
       const pc = pcRef.current;
       if (!pc) return;
       if (!remoteDescSet.current) { pendingCandidates.current.push(candidate); return; }
-      try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
+      try { await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)); }
       catch { /* stale */ }
     };
 
