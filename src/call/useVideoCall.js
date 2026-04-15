@@ -1,9 +1,6 @@
 /**
  * useVideoCall.js — WebRTC 1-to-1 video call hook
- *
- * Socket field names: toUserId (matches index.js handlers)
- * Incoming payload stored in useRef (not on socket object)
- * callStateRef prevents stale closure in socket callbacks
+ * FIX: Updated payload keys to match backend 'to' property.
  */
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { getSocket } from '../socket/socket';
@@ -58,7 +55,8 @@ export function useVideoCall() {
 
     pc.onicecandidate = ({ candidate }) => {
       if (candidate && socket) {
-        socket.emit('ice-candidate', { toUserId: targetUserId, candidate });
+        // FIX: Changed toUserId to 'to'
+        socket.emit('ice-candidate', { to: targetUserId, candidate });
       }
     };
 
@@ -110,7 +108,6 @@ export function useVideoCall() {
     pendingCandidates.current = [];
   }, []);
 
-  // ── startCall ──────────────────────────────────────────────────────────────
   const startCall = useCallback(async (targetUser) => {
     if (callStateRef.current !== CallState.IDLE) return;
     const socket = getSocket();
@@ -118,12 +115,9 @@ export function useVideoCall() {
 
     const targetId = (targetUser._id || targetUser.id)?.toString();
     if (!targetId) {
-      console.error('[VideoCall] startCall — could not resolve targetUser id', targetUser);
       setCallError('Invalid user');
       return;
     }
-
-    console.log('[VideoCall] startCall → targetId:', targetId);
 
     try {
       setCallState(CallState.CALLING);
@@ -137,17 +131,18 @@ export function useVideoCall() {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
+      // FIX: Changed toUserId to 'to' and added proper 'from' info
       socket.emit('call-user', {
-        toUserId: targetId,
-        offer:    pc.localDescription,
+        to: targetId,
+        from: { id: user._id || user.id, name: user.name },
+        offer: pc.localDescription,
       });
     } catch (err) {
       setCallError(err.message || 'Failed to start call');
       cleanup();
     }
-  }, [getLocalStream, createPC, cleanup]);
+  }, [getLocalStream, createPC, cleanup, user]);
 
-  // ── answerCall ─────────────────────────────────────────────────────────────
   const answerCall = useCallback(async () => {
     const payload = incomingRef.current;
     if (!payload) return;
@@ -155,7 +150,6 @@ export function useVideoCall() {
     if (!socket) return;
 
     const callerId = payload.from.id;
-    console.log('[VideoCall] answerCall → callerId:', callerId);
 
     try {
       setCallState(CallState.CONNECTED);
@@ -172,9 +166,10 @@ export function useVideoCall() {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
+      // FIX: Changed toUserId to 'to'
       socket.emit('answer-call', {
-        toUserId: callerId,
-        answer:   pc.localDescription,
+        to: callerId,
+        answer: pc.localDescription,
       });
     } catch (err) {
       setCallError(err.message || 'Failed to answer');
@@ -182,12 +177,12 @@ export function useVideoCall() {
     }
   }, [getLocalStream, createPC, drainCandidates, cleanup]);
 
-  // ── rejectCall / endCall ───────────────────────────────────────────────────
   const rejectCall = useCallback(() => {
     const socket  = getSocket();
     const payload = incomingRef.current;
+    // FIX: Changed toUserId to 'to'
     if (socket && payload?.from?.id) {
-      socket.emit('end-call', { toUserId: payload.from.id });
+      socket.emit('end-call', { to: payload.from.id });
     }
     cleanup();
   }, [cleanup]);
@@ -195,13 +190,13 @@ export function useVideoCall() {
   const endCall = useCallback(() => {
     const socket   = getSocket();
     const targetId = remoteUser?.id;
+    // FIX: Changed toUserId to 'to'
     if (socket && targetId) {
-      socket.emit('end-call', { toUserId: targetId });
+      socket.emit('end-call', { to: targetId });
     }
     cleanup();
   }, [remoteUser, cleanup]);
 
-  // ── Media controls ─────────────────────────────────────────────────────────
   const toggleMute = useCallback(() => {
     localStreamRef.current?.getAudioTracks().forEach(t => { t.enabled = !t.enabled; });
     setIsMuted(p => !p);
@@ -238,15 +233,13 @@ export function useVideoCall() {
     }
   }, [isScreenSharing]);
 
-  // ── Socket listeners ───────────────────────────────────────────────────────
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const onIncoming = (payload) => {
-      console.log('[VideoCall] 📞 incoming-call received from', payload?.from);
       if (callStateRef.current !== CallState.IDLE) {
-        socket.emit('end-call', { toUserId: payload.from.id });
+        socket.emit('end-call', { to: payload.from.id });
         return;
       }
       incomingRef.current = payload;
