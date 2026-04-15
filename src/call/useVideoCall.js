@@ -1,19 +1,9 @@
 /**
  * useVideoCall.js — WebRTC 1-to-1 video call hook
  *
- * FIXES vs previous version:
- *   - All socket emits use `toUserId` (matches backend index.js handler signatures)
- *   - Incoming payload stored in useRef (not on socket object)
- *   - callStateRef prevents stale closure in socket callbacks
- *   - toggleScreenShare dep array fixed
- *
- * BUG FIX (root cause — socket routing failure):
- *   - targetUser coming from Redux store / presence list is a PLAIN object.
- *     Plain objects have no Mongoose virtual `.id` getter — only `._id`.
- *     So targetUser.id === undefined → socket.emit('call-user', { toUserId: undefined })
- *     → io.to(undefined) on server → no room match → receiver never gets incoming-call.
- *   - Fix: normalize to string via (targetUser._id || targetUser.id).toString()
- *     and store the normalized id on remoteUser so endCall also works correctly.
+ * Socket field names: toUserId (matches index.js handlers)
+ * Incoming payload stored in useRef (not on socket object)
+ * callStateRef prevents stale closure in socket callbacks
  */
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { getSocket } from '../socket/socket';
@@ -45,7 +35,7 @@ export function useVideoCall() {
   const remoteVideoRef    = useRef(null);
   const pendingCandidates = useRef([]);
   const remoteDescSet     = useRef(false);
-  const incomingRef       = useRef(null);   // stores incoming call payload
+  const incomingRef       = useRef(null);
   const callStateRef      = useRef(callState);
 
   useEffect(() => { callStateRef.current = callState; }, [callState]);
@@ -126,9 +116,6 @@ export function useVideoCall() {
     const socket = getSocket();
     if (!socket?.connected) { setCallError('Not connected'); return; }
 
-    // FIX: targetUser is a plain object from the store — it has ._id not .id
-    // (._id may be an ObjectId or already a string depending on serialization)
-    // Always resolve to a plain string before using as a socket room address.
     const targetId = (targetUser._id || targetUser.id)?.toString();
     if (!targetId) {
       console.error('[VideoCall] startCall — could not resolve targetUser id', targetUser);
@@ -140,19 +127,16 @@ export function useVideoCall() {
 
     try {
       setCallState(CallState.CALLING);
-      // Store normalized remoteUser so endCall() can reliably read .id
       setRemoteUser({ ...targetUser, id: targetId });
       setCallError(null);
 
       const stream = await getLocalStream();
-      // FIX: pass targetId (string) not targetUser.id (was undefined)
       const pc     = createPC(targetId);
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // FIX: toUserId is now targetId (string), not undefined
       socket.emit('call-user', {
         toUserId: targetId,
         offer:    pc.localDescription,
@@ -170,7 +154,6 @@ export function useVideoCall() {
     const socket = getSocket();
     if (!socket) return;
 
-    // payload.from.id is constructed by the server from userId (_id.toString()) — safe
     const callerId = payload.from.id;
     console.log('[VideoCall] answerCall → callerId:', callerId);
 
@@ -203,20 +186,16 @@ export function useVideoCall() {
   const rejectCall = useCallback(() => {
     const socket  = getSocket();
     const payload = incomingRef.current;
-    // payload.from.id is server-set string — safe
     if (socket && payload?.from?.id) {
-      console.log('[VideoCall] rejectCall → toUserId:', payload.from.id);
       socket.emit('end-call', { toUserId: payload.from.id });
     }
     cleanup();
   }, [cleanup]);
 
   const endCall = useCallback(() => {
-    const socket = getSocket();
-    // remoteUser.id was normalized to string in startCall (or set from server payload in answerCall)
+    const socket   = getSocket();
     const targetId = remoteUser?.id;
     if (socket && targetId) {
-      console.log('[VideoCall] endCall → toUserId:', targetId);
       socket.emit('end-call', { toUserId: targetId });
     }
     cleanup();
@@ -265,6 +244,7 @@ export function useVideoCall() {
     if (!socket) return;
 
     const onIncoming = (payload) => {
+      console.log('[VideoCall] 📞 incoming-call received from', payload?.from);
       if (callStateRef.current !== CallState.IDLE) {
         socket.emit('end-call', { toUserId: payload.from.id });
         return;
