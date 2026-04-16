@@ -31,8 +31,15 @@ export default function VideoCallButton({ members = [], callHook }) {
 
   const handleCallMember = (member) => {
     setOpen(false);
+    const memberId = member._id || member.id;
+    console.log('[VideoCallButton] 📞 Calling member:', {
+      memberId,
+      memberName: member.name,
+      memberObject: member,
+    });
     startCall({
-      id:   member._id || member.id,
+      _id:  memberId,
+      id:   memberId,
       name: member.name,
     });
   };

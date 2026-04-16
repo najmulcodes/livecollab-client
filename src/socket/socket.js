@@ -42,6 +42,9 @@ export function initSocket(token) {
       console.log(`[socket] 🔄 re-joining workspace after reconnect: ${currentWorkspaceId}`);
       socket.emit('joinWorkspace', currentWorkspaceId);
     }
+    
+    // Debug: Log all active rooms this socket is in
+    console.log('[socket] 📍 Active rooms:', socket.rooms ? [...socket.rooms] : 'none');
   });
 
   socket.on('connect_error', (err) => {
