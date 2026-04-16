@@ -90,15 +90,52 @@ export function useVideoCall() {
 
     pc.onconnectionstatechange = () => {
       console.log('[peer] Connection state:', pc.connectionState);
+      // FIX: Check callState before cleanup to prevent race condition
       if (['disconnected', 'failed'].includes(pc.connectionState)) {
-        console.warn('[peer] ⚠️  Connection', pc.connectionState, '- cleaning up');
-        cleanup();
+        const currentState = callStateRef.current;
+        console.warn('[peer] ⚠️  Connection', pc.connectionState, '| callState:', currentState);
+        // Only cleanup if we're actually in a call (not during normal end)
+        if (currentState !== CallState.IDLE) {
+          console.log('[peer] 🧹 Calling cleanup due to peer failure');
+          // Use ref to avoid dependency
+          if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+          if (outgoingAudioRef.current) {
+            outgoingAudioRef.current.pause();
+            outgoingAudioRef.current.currentTime = 0;
+          }
+          if (incomingAudioRef.current) {
+            incomingAudioRef.current.pause();
+            incomingAudioRef.current.currentTime = 0;
+          }
+          localStreamRef.current?.getTracks().forEach(t => t.stop());
+          localStreamRef.current = null;
+          screenStreamRef.current?.getTracks().forEach(t => t.stop());
+          screenStreamRef.current = null;
+          if (pcRef.current) {
+            pcRef.current.onicecandidate = null;
+            pcRef.current.ontrack = null;
+            pcRef.current.onconnectionstatechange = null;
+            pcRef.current.close();
+            pcRef.current = null;
+          }
+          if (localVideoRef.current) localVideoRef.current.srcObject = null;
+          if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+          pendingCandidates.current = [];
+          remoteDescSet.current = false;
+          incomingRef.current = null;
+          setCallState(CallState.IDLE);
+          setRemoteUser(null);
+          setIsMuted(false);
+          setIsCameraOff(false);
+          setIsScreenSharing(false);
+          setCallError('Connection lost');
+        }
       }
     };
 
     pcRef.current = pc;
     return pc;
-  }, [cleanup]);
+  }, []); // FIX: Empty deps - no cleanup dependency
 
   const cleanup = useCallback(() => {
     console.log('[cleanup] 🧹 Starting cleanup | callState:', callStateRef.current);
@@ -225,10 +262,15 @@ export function useVideoCall() {
 
       // ─── Start 30s timeout ─────────────────────────────────────────────────
       callTimeoutRef.current = setTimeout(() => {
-        console.log('[timeout] ⏱️  Call not answered within 30s');
-        setCallError('Call timed out');
-        socket.emit('end-call', { to: targetId });
-        cleanup();
+        // FIX: Guard with callState to prevent race condition
+        if (callStateRef.current === CallState.CALLING) {
+          console.log('[timeout] ⏱️  Call not answered within 30s | callState:', callStateRef.current);
+          setCallError('Call timed out');
+          socket.emit('end-call', { to: targetId });
+          cleanup();
+        } else {
+          console.log('[timeout] ⏱️  Timeout fired but call already answered/ended | callState:', callStateRef.current);
+        }
       }, 30000);
       console.log('[startCall] ⏱️  30s timeout started');
     } catch (err) {
@@ -385,25 +427,30 @@ export function useVideoCall() {
       console.log('[incoming-call] ✅ ACCEPTED - updating state to INCOMING');
       incomingRef.current = payload;
       
-      console.log('[incoming-call] 🔄 Setting callState to INCOMING...');
+      console.log('[incoming-call] 🔄 Setting state atomically...');
+      // FIX: Atomic state update to prevent render between updates
       setCallState(CallState.INCOMING);
-      console.log('[incoming-call] 🔄 Setting remoteUser:', payload.from);
       setRemoteUser(payload.from);
       console.log('[incoming-call] ✅ State updated successfully');
 
       // ─── Start incoming ringtone ───────────────────────────────────────────
       if (incomingAudioRef.current) {
-        incomingAudioRef.current.play().catch(err => {
-          console.warn('[incoming-call] ⚠️  Ringtone autoplay blocked:', err.message);
-        });
-        console.log('[incoming-call] 🔔 Ringtone started');
+        // FIX: Use setTimeout to ensure state update completes first
+        setTimeout(() => {
+          if (incomingAudioRef.current && callStateRef.current === CallState.INCOMING) {
+            incomingAudioRef.current.play().catch(err => {
+              console.warn('[incoming-call] ⚠️  Ringtone autoplay blocked:', err.message);
+            });
+            console.log('[incoming-call] 🔔 Ringtone started');
+          }
+        }, 0);
       }
     };
 
     const onAnswered = async ({ answer }) => {
-      console.log('[call-answered] ✅ RECEIVED | answer:', !!answer);
+      console.log('[call-answered] ✅ RECEIVED | answer:', !!answer, '| callState:', callStateRef.current);
       
-      // ─── Clear timeout + stop outgoing audio ───────────────────────────────
+      // FIX: Clear timeout IMMEDIATELY before any async operations
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
         callTimeoutRef.current = null;
@@ -420,6 +467,13 @@ export function useVideoCall() {
         console.warn('[call-answered] ⚠️  No peer connection');
         return;
       }
+      
+      // FIX: Guard against processing if already connected or idle
+      if (callStateRef.current !== CallState.CALLING) {
+        console.warn('[call-answered] ⚠️  Ignoring - not in CALLING state:', callStateRef.current);
+        return;
+      }
+      
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
         remoteDescSet.current = true;
