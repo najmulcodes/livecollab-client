@@ -357,19 +357,39 @@ export function useVideoCall() {
 
   useEffect(() => {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      console.error('[useVideoCall] ❌ Socket not available - cannot register listeners');
+      return;
+    }
+
+    console.log('[useVideoCall] 🔌 Socket available, registering listeners | socketId:', socket.id, '| connected:', socket.connected);
 
     const onIncoming = (payload) => {
-      console.log('[incoming-call] ✅ RECEIVED | from:', payload?.from, '| offer:', !!payload?.offer);
+      console.log('[incoming-call] 🔔 EVENT RECEIVED');
+      console.log('[incoming-call] 📦 Payload:', JSON.stringify(payload, null, 2));
+      console.log('[incoming-call] 📊 Current callState:', callStateRef.current);
+      console.log('[incoming-call] 👤 From:', payload?.from);
+      console.log('[incoming-call] 📞 Offer present:', !!payload?.offer);
+      
+      if (!payload || !payload.from || !payload.offer) {
+        console.error('[incoming-call] ❌ Invalid payload - missing required fields');
+        return;
+      }
+      
       if (callStateRef.current !== CallState.IDLE) {
         console.log('[incoming-call] ⚠️  REJECTED - already in call state:', callStateRef.current);
         socket.emit('end-call', { to: payload.from.id });
         return;
       }
-      console.log('[incoming-call] ✅ ACCEPTED - setting state to INCOMING');
+      
+      console.log('[incoming-call] ✅ ACCEPTED - updating state to INCOMING');
       incomingRef.current = payload;
+      
+      console.log('[incoming-call] 🔄 Setting callState to INCOMING...');
       setCallState(CallState.INCOMING);
+      console.log('[incoming-call] 🔄 Setting remoteUser:', payload.from);
       setRemoteUser(payload.from);
+      console.log('[incoming-call] ✅ State updated successfully');
 
       // ─── Start incoming ringtone ───────────────────────────────────────────
       if (incomingAudioRef.current) {
@@ -433,18 +453,37 @@ export function useVideoCall() {
       cleanup();
     };
 
-    console.log('[useVideoCall] 🔌 Registering socket listeners');
+    console.log('[useVideoCall] 🔌 Registering socket listeners...');
+    console.log('[useVideoCall] 📋 Listener: incoming-call');
     socket.on('incoming-call', onIncoming);
+    console.log('[useVideoCall] 📋 Listener: call-answered');
     socket.on('call-answered', onAnswered);
+    console.log('[useVideoCall] 📋 Listener: ice-candidate');
     socket.on('ice-candidate', onIce);
+    console.log('[useVideoCall] 📋 Listener: end-call');
     socket.on('end-call',      onEndCall);
+    console.log('[useVideoCall] ✅ All socket listeners registered successfully');
+
+    // Test if listener is actually registered
+    const listenerCount = socket.listeners('incoming-call').length;
+    console.log('[useVideoCall] 🔍 incoming-call listener count:', listenerCount);
+    if (listenerCount === 0) {
+      console.error('[useVideoCall] ❌ WARNING: incoming-call listener not registered!');
+    }
 
     return () => {
-      console.log('[useVideoCall] 🔌 Unregistering socket listeners');
+      console.log('[useVideoCall] 🔌 Unregistering socket listeners...');
+      const beforeCount = socket.listeners('incoming-call').length;
+      console.log('[useVideoCall] 📊 incoming-call listeners before cleanup:', beforeCount);
+      
       socket.off('incoming-call', onIncoming);
       socket.off('call-answered', onAnswered);
       socket.off('ice-candidate', onIce);
       socket.off('end-call',      onEndCall);
+      
+      const afterCount = socket.listeners('incoming-call').length;
+      console.log('[useVideoCall] 📊 incoming-call listeners after cleanup:', afterCount);
+      console.log('[useVideoCall] ✅ Socket listeners unregistered');
     };
   }, [cleanup, drainCandidates]);
 

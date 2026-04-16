@@ -14,8 +14,32 @@ export default function VideoCallModal({ callHook }) {
     toggleMute, toggleCamera, toggleScreenShare,
   } = callHook;
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[VideoCallModal] 📊 State changed:', {
+      callState,
+      remoteUser,
+      isVisible: callState !== CallState.IDLE,
+    });
+  }, [callState, remoteUser]);
+
   const isVisible = callState !== CallState.IDLE;
-  if (!isVisible) return null;
+  
+  console.log('[VideoCallModal] 🔍 Render check:', {
+    callState,
+    isVisible,
+    isIdle: callState === CallState.IDLE,
+    isIncoming: callState === CallState.INCOMING,
+    isCalling: callState === CallState.CALLING,
+    isConnected: callState === CallState.CONNECTED,
+  });
+  
+  if (!isVisible) {
+    console.log('[VideoCallModal] ❌ Not rendering - callState is IDLE');
+    return null;
+  }
+  
+  console.log('[VideoCallModal] ✅ Rendering modal - callState:', callState);
 
   return (
     <div style={styles.overlay}>
