@@ -48,11 +48,30 @@ export function initSocket(token) {
   });
 
   socket.on('connect_error', (err) => {
-    console.warn('[socket] connect error:', err.message);
+    console.warn('[socket] ❌ connect error:', err.message);
+  });
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log(`[socket] 🔄 Reconnect attempt #${attemptNumber}`);
+  });
+
+  socket.on('reconnect', (attemptNumber) => {
+    console.log(`[socket] ✅ Reconnected after ${attemptNumber} attempts`);
   });
 
   socket.on('disconnect', (reason) => {
-    console.warn('[socket] disconnected | reason:', reason);
+    console.warn('[socket] ❌ disconnected | reason:', reason);
+    if (reason === 'io server disconnect') {
+      console.warn('[socket] ⚠️  Server forcibly disconnected this socket');
+    } else if (reason === 'io client disconnect') {
+      console.warn('[socket] ⚠️  Client called socket.disconnect()');
+    } else if (reason === 'ping timeout') {
+      console.warn('[socket] ⚠️  Server did not respond to ping in time');
+    } else if (reason === 'transport close') {
+      console.warn('[socket] ⚠️  Underlying transport closed');
+    } else if (reason === 'transport error') {
+      console.warn('[socket] ⚠️  Transport encountered an error');
+    }
   });
 
   return socket;

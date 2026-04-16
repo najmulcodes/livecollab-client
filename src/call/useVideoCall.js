@@ -34,8 +34,35 @@ export function useVideoCall() {
   const remoteDescSet     = useRef(false);
   const incomingRef       = useRef(null);
   const callStateRef      = useRef(callState);
+  
+  // ─── Timeout + Audio refs ──────────────────────────────────────────────────
+  const callTimeoutRef    = useRef(null);
+  const outgoingAudioRef  = useRef(null);
+  const incomingAudioRef  = useRef(null);
 
   useEffect(() => { callStateRef.current = callState; }, [callState]);
+
+  // ─── Initialize audio on mount ─────────────────────────────────────────────
+  useEffect(() => {
+    // Create audio instances (lazy load)
+    outgoingAudioRef.current = new Audio('/sounds/calling.mp3');
+    outgoingAudioRef.current.loop = true;
+    
+    incomingAudioRef.current = new Audio('/sounds/ringtone.mp3');
+    incomingAudioRef.current.loop = true;
+
+    return () => {
+      // Cleanup audio on unmount
+      if (outgoingAudioRef.current) {
+        outgoingAudioRef.current.pause();
+        outgoingAudioRef.current = null;
+      }
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.pause();
+        incomingAudioRef.current = null;
+      }
+    };
+  }, []);
 
   const attachStream = (videoRef, stream) => {
     if (videoRef.current && stream) videoRef.current.srcObject = stream;
@@ -55,7 +82,6 @@ export function useVideoCall() {
 
     pc.onicecandidate = ({ candidate }) => {
       if (candidate && socket) {
-        // FIX: Changed toUserId to 'to'
         socket.emit('ice-candidate', { to: targetUserId, candidate });
       }
     };
@@ -63,41 +89,74 @@ export function useVideoCall() {
     pc.ontrack = (e) => attachStream(remoteVideoRef, e.streams[0]);
 
     pc.onconnectionstatechange = () => {
-      if (['disconnected', 'failed'].includes(pc.connectionState)) cleanup();
+      console.log('[peer] Connection state:', pc.connectionState);
+      if (['disconnected', 'failed'].includes(pc.connectionState)) {
+        console.warn('[peer] ⚠️  Connection', pc.connectionState, '- cleaning up');
+        cleanup();
+      }
     };
 
     pcRef.current = pc;
     return pc;
-  }, []);
+  }, [cleanup]);
 
   const cleanup = useCallback(() => {
+    console.log('[cleanup] 🧹 Starting cleanup | callState:', callStateRef.current);
+    
+    // ─── Clear timeout ─────────────────────────────────────────────────────────
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+      console.log('[cleanup] ⏱️  Timeout cleared');
+    }
+
+    // ─── Stop audio ────────────────────────────────────────────────────────────
+    if (outgoingAudioRef.current) {
+      outgoingAudioRef.current.pause();
+      outgoingAudioRef.current.currentTime = 0;
+      console.log('[cleanup] 🔇 Outgoing audio stopped');
+    }
+    if (incomingAudioRef.current) {
+      incomingAudioRef.current.pause();
+      incomingAudioRef.current.currentTime = 0;
+      console.log('[cleanup] 🔇 Incoming audio stopped');
+    }
+
+    // ─── Stop media tracks ─────────────────────────────────────────────────────
     localStreamRef.current?.getTracks().forEach(t => t.stop());
     localStreamRef.current = null;
     screenStreamRef.current?.getTracks().forEach(t => t.stop());
     screenStreamRef.current = null;
 
+    // ─── Close peer connection ─────────────────────────────────────────────────
     if (pcRef.current) {
       pcRef.current.onicecandidate = null;
       pcRef.current.ontrack = null;
       pcRef.current.onconnectionstatechange = null;
       pcRef.current.close();
       pcRef.current = null;
+      console.log('[cleanup] 🔌 Peer connection closed');
     }
 
+    // ─── Clear video elements ──────────────────────────────────────────────────
     if (localVideoRef.current)  localVideoRef.current.srcObject  = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
+    // ─── Reset refs ────────────────────────────────────────────────────────────
     pendingCandidates.current = [];
     remoteDescSet.current     = false;
     incomingRef.current       = null;
 
+    // ─── Reset state ───────────────────────────────────────────────────────────
     setCallState(CallState.IDLE);
     setRemoteUser(null);
     setIsMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
     setCallError(null);
-  }, []);
+    
+    console.log('[cleanup] ✅ Cleanup complete');
+  }, []); // Empty deps - cleanup should be stable
 
   const drainCandidates = useCallback(async () => {
     if (!pcRef.current) return;
@@ -155,6 +214,23 @@ export function useVideoCall() {
       console.log('[startCall] 📤 Emitting call-user event:', { to: payload.to, from: payload.from, offerType: payload.offer.type });
       socket.emit('call-user', payload);
       console.log('[startCall] ✅ call-user event emitted successfully');
+
+      // ─── Start outgoing audio ──────────────────────────────────────────────
+      if (outgoingAudioRef.current) {
+        outgoingAudioRef.current.play().catch(err => {
+          console.warn('[startCall] ⚠️  Outgoing audio autoplay blocked:', err.message);
+        });
+        console.log('[startCall] 🔊 Outgoing audio started');
+      }
+
+      // ─── Start 30s timeout ─────────────────────────────────────────────────
+      callTimeoutRef.current = setTimeout(() => {
+        console.log('[timeout] ⏱️  Call not answered within 30s');
+        setCallError('Call timed out');
+        socket.emit('end-call', { to: targetId });
+        cleanup();
+      }, 30000);
+      console.log('[startCall] ⏱️  30s timeout started');
     } catch (err) {
       console.error('[startCall] ❌ Error:', err);
       setCallError(err.message || 'Failed to start call');
@@ -180,6 +256,13 @@ export function useVideoCall() {
     try {
       setCallState(CallState.CONNECTED);
       setCallError(null);
+
+      // ─── Stop incoming ringtone ────────────────────────────────────────────
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.pause();
+        incomingAudioRef.current.currentTime = 0;
+        console.log('[answerCall] 🔇 Ringtone stopped');
+      }
 
       console.log('[answerCall] 🎥 Getting local stream...');
       const stream = await getLocalStream();
@@ -287,10 +370,31 @@ export function useVideoCall() {
       incomingRef.current = payload;
       setCallState(CallState.INCOMING);
       setRemoteUser(payload.from);
+
+      // ─── Start incoming ringtone ───────────────────────────────────────────
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.play().catch(err => {
+          console.warn('[incoming-call] ⚠️  Ringtone autoplay blocked:', err.message);
+        });
+        console.log('[incoming-call] 🔔 Ringtone started');
+      }
     };
 
     const onAnswered = async ({ answer }) => {
       console.log('[call-answered] ✅ RECEIVED | answer:', !!answer);
+      
+      // ─── Clear timeout + stop outgoing audio ───────────────────────────────
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
+        console.log('[call-answered] ⏱️  Timeout cleared');
+      }
+      if (outgoingAudioRef.current) {
+        outgoingAudioRef.current.pause();
+        outgoingAudioRef.current.currentTime = 0;
+        console.log('[call-answered] 🔇 Outgoing audio stopped');
+      }
+
       const pc = pcRef.current;
       if (!pc) {
         console.warn('[call-answered] ⚠️  No peer connection');
@@ -344,7 +448,28 @@ export function useVideoCall() {
     };
   }, [cleanup, drainCandidates]);
 
-  useEffect(() => () => cleanup(), []);
+  useEffect(() => {
+    // Cleanup only on unmount, NOT on cleanup function changes
+    return () => {
+      console.log('[useVideoCall] 🧹 Component unmounting - cleaning up');
+      // Call cleanup directly without dependency
+      if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+      if (outgoingAudioRef.current) {
+        outgoingAudioRef.current.pause();
+        outgoingAudioRef.current = null;
+      }
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.pause();
+        incomingAudioRef.current = null;
+      }
+      localStreamRef.current?.getTracks().forEach(t => t.stop());
+      screenStreamRef.current?.getTracks().forEach(t => t.stop());
+      if (pcRef.current) {
+        pcRef.current.close();
+        pcRef.current = null;
+      }
+    };
+  }, []); // Empty deps - only run on mount/unmount
 
   return {
     callState, remoteUser, isMuted, isCameraOff, isScreenSharing, callError,
