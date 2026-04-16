@@ -1,8 +1,8 @@
 # LiveCollab
 
-A real-time collaborative workspace built with React, designed to simulate a modern SaaS collaboration environment.
+A real-time collaborative workspace built with React, designed to simulate a modern SaaS collaboration environment — with a strong focus on **reliability, real-time consistency, and stable peer-to-peer communication**.
 
-LiveCollab enables teams to manage tasks, communicate in real-time, and initiate peer-to-peer video calls within a shared workspace.
+LiveCollab enables teams to manage tasks, collaborate live, and initiate WebRTC-based video calls inside a shared workspace.
 
 ---
 
@@ -15,44 +15,83 @@ https://livecollab-rho.vercel.app/
 ## ✨ Core Features
 
 ### 🔐 Authentication
+- JWT-based authentication (login/register)
+- Google OAuth integration
+- Persistent session handling
 
-* JWT-based authentication (login/register)
-* Google OAuth integration
-* Persistent session handling
+---
 
 ### 🧩 Workspace System
+- Create and join workspaces
+- Role-based access (Owner, Admin, Member)
+- Online/offline member presence tracking
 
-* Create and join workspaces
-* Role-based access (Owner, Admin, Member)
-* Member presence tracking (online/offline)
+---
 
 ### 📌 Task Management (Kanban)
+- Drag-and-drop board (Todo / Doing / Done)
+- Real-time updates across all users
+- Stable state management using Zustand
+- No empty-state or inconsistent UI issues
 
-* Drag-and-drop board (Todo / Doing / Done)
-* Real-time updates across users
-* Consistent state management with Zustand
+---
 
 ### 💬 Real-time Collaboration
+- Socket.IO powered live updates
+- Shared workspace synchronization
+- Activity tracking and typing indicators
 
-* Live updates via Socket.IO
-* Activity tracking and typing indicators
+---
 
-### 🎥 Video Call (WebRTC)
+### 🎥 Video Calling (WebRTC)
+- 1-to-1 peer-to-peer video calls
+- Screen sharing via `getDisplayMedia`
+- Custom signaling system (no external services)
+- Full call lifecycle handling:
+  - `call-user → incoming-call → answer-call → call-answered`
+- Incoming call popup with accept/reject flow
+- Call timeout (30s) with safe guards
+- Audio feedback (ringtone + calling tone)
 
-* 1-to-1 peer-to-peer video calling
-* Screen sharing support
-* No external services (pure WebRTC + signaling)
+---
+
+## 🧠 Engineering Focus (What Makes This Different)
+
+This project is not just about features — it focuses on solving **real-world reliability problems**:
+
+### ✔ Stability Improvements
+- Fixed race conditions in timeout vs WebRTC signaling
+- Prevented premature cleanup during async call setup
+- Eliminated socket re-initialization issues
+- Stabilized event → state → UI flow
+
+### ✔ Real-time Consistency
+- Ensured deterministic socket event handling
+- Fixed UI inconsistency under concurrent updates
+- Normalized state to avoid ID mismatch bugs
+
+### ✔ WebRTC Reliability
+- Guarded signaling flow against stale events
+- Controlled lifecycle of peer connections
+- Ensured stable ICE candidate exchange
 
 ---
 
 ## 🛠️ Tech Stack
 
-* React (Vite)
-* Zustand (state management)
-* Socket.IO Client
-* Axios
-* Tailwind CSS
-* WebRTC
+**Frontend**
+- React (Vite)
+- Zustand
+- Tailwind CSS
+- Socket.IO Client
+- Axios
+- WebRTC APIs
+
+**Backend**
+- Node.js
+- Express
+- MongoDB
+- Socket.IO
 
 ---
 
@@ -60,89 +99,6 @@ https://livecollab-rho.vercel.app/
 
 Create a `.env` file:
 
-```
+```env
 VITE_API_URL=https://your-backend-url/api
 VITE_SOCKET_URL=https://your-backend-url
-```
-
----
-
-## 📦 Installation
-
-```bash
-git clone https://github.com/your-username/livecollab-client.git
-cd livecollab-client
-npm install
-```
-
----
-
-## ▶️ Development
-
-```bash
-npm run dev
-```
-
-App runs at:
-
-```
-http://localhost:5173
-```
-
----
-
-## 🧠 Architecture Overview
-
-* Centralized state using Zustand
-* Socket connection initialized post-authentication
-* API → Store → UI data flow
-* WebRTC peer connection managed via custom hooks
-
----
-
-## 🔄 Real-time Flow
-
-* Client joins workspace via socket
-* Server broadcasts updates to workspace room
-* UI updates instantly without refresh
-
----
-
-## 📁 Project Structure
-
-```
-src/
-  components/
-  pages/
-  store/
-  hooks/
-  socket/
-  lib/
-```
-
----
-
-## 🚀 Deployment
-
-Recommended: Vercel
-
-Steps:
-
-1. Push repository
-2. Import into Vercel
-3. Add environment variables
-4. Deploy
-
----
-
-## ⚠️ Notes
-
-* Board always initializes (no empty-state bugs)
-* State normalized to avoid ID inconsistencies
-* Socket payloads aligned with backend schema
-
----
-
-## 📄 License
-
-MIT
